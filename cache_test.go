@@ -16,17 +16,37 @@ import (
 	"github.com/zly-app/cache/errs"
 )
 
-func makeMemoryCache(t *testing.T, conf *Config) ICache {
-	cache, err := NewCache(conf)
+func makeMemoryCache() ICache {
+	cache, err := NewCache(NewConfig())
 	if err != nil {
-		t.Fatalf("创建Cache失败: %v", err)
+		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
 	return cache
 }
 
-func TestSetGet(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key = "key"
+func TestMemoryCache(t *testing.T) {
+	t.Run("testSetGet", func(t *testing.T) { testSetGet(t, makeMemoryCache()) })
+	t.Run("testSetGetSlice", func(t *testing.T) { testSetGetSlice(t, makeMemoryCache()) })
+	t.Run("testDel", func(t *testing.T) { testDel(t, makeMemoryCache()) })
+	t.Run("testExpire", func(t *testing.T) { testExpire(t, makeMemoryCache()) })
+	t.Run("testDefaultExpire", func(t *testing.T) {
+		conf := NewConfig()
+		conf.ExpireSec = 1
+		cache, err := NewCache(conf)
+		if err != nil {
+			panic(fmt.Errorf("创建Cache失败: %v", err))
+		}
+		testDefaultExpire(t, cache)
+	})
+	t.Run("testLoadFn", func(t *testing.T) { testLoadFn(t, makeMemoryCache()) })
+	t.Run("testMSet", func(t *testing.T) { testMSet(t, makeMemoryCache()) })
+	t.Run("testMGet", func(t *testing.T) { testMGet(t, makeMemoryCache()) })
+	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeMemoryCache()) })
+	t.Run("testClose", func(t *testing.T) { testClose(t, makeMemoryCache()) })
+}
+
+func testSetGet(t *testing.T, cache ICache) {
+	const key = "testSetGet"
 
 	var a = 3
 	err := cache.Set(context.Background(), key, a)
@@ -37,10 +57,8 @@ func TestSetGet(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, a, b)
 }
-
-func TestSetGetSlice(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key = "key"
+func testSetGetSlice(t *testing.T, cache ICache) {
+	const key = "testSetGetSlice"
 
 	type A struct {
 		A int
@@ -59,10 +77,8 @@ func TestSetGetSlice(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, a, b)
 }
-
-func TestDel(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key = "key"
+func testDel(t *testing.T, cache ICache) {
+	const key = "testDel"
 
 	var a = 3
 	err := cache.Set(context.Background(), key, a)
@@ -75,10 +91,8 @@ func TestDel(t *testing.T) {
 	err = cache.Get(context.Background(), key, &b)
 	require.Equal(t, errs.CacheMiss, err)
 }
-
-func TestExpire(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key = "key"
+func testExpire(t *testing.T, cache ICache) {
+	const key = "testExpire"
 
 	var a = 3
 	err := cache.Set(context.Background(), key, a, WithExpire(1))
@@ -95,12 +109,8 @@ func TestExpire(t *testing.T) {
 	err = cache.Get(context.Background(), key, &c)
 	require.Equal(t, errs.CacheMiss, err)
 }
-
-func TestDefaultExpire(t *testing.T) {
-	conf := NewConfig()
-	conf.ExpireSec = 1
-	cache := makeMemoryCache(t, conf)
-	const key = "key"
+func testDefaultExpire(t *testing.T, cache ICache) {
+	const key = "testDefaultExpire"
 
 	var a = 3
 	err := cache.Set(context.Background(), key, a)
@@ -117,10 +127,8 @@ func TestDefaultExpire(t *testing.T) {
 	err = cache.Get(context.Background(), key, &c)
 	require.Equal(t, errs.CacheMiss, err)
 }
-
-func TestLoadFn(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key = "key"
+func testLoadFn(t *testing.T, cache ICache) {
+	const key = "testLoadFn"
 
 	var a = 3
 	var load bool
@@ -134,11 +142,9 @@ func TestLoadFn(t *testing.T) {
 	require.Equal(t, true, load)
 	require.Equal(t, a, b)
 }
-
-func TestMSet(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key1 = "key1"
-	const key2 = "key2"
+func testMSet(t *testing.T, cache ICache) {
+	const key1 = "testMSet1"
+	const key2 = "testMSet2"
 
 	var a = map[string]interface{}{
 		key1: 1,
@@ -157,12 +163,10 @@ func TestMSet(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, a[key2], c)
 }
-
-func TestMGet(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key1 = "key1"
-	const key2 = "key2"
-	const key3 = "key3"
+func testMGet(t *testing.T, cache ICache) {
+	const key1 = "testMGet1"
+	const key2 = "testMGet2"
+	const key3 = "testMGet3"
 
 	var a = 1
 	err := cache.Set(context.Background(), key1, a)
@@ -214,12 +218,10 @@ func TestMGet(t *testing.T) {
 	require.Equal(t, 0, c3)
 	require.Equal(t, ErrDataIsNil, GetKeyError(err, key3))
 }
-
-func TestMGetSlice(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key1 = "key1"
-	const key2 = "key2"
-	const key3 = "key3"
+func testMGetSlice(t *testing.T, cache ICache) {
+	const key1 = "testMGetSlice1"
+	const key2 = "testMGetSlice2"
+	const key3 = "testMGetSlice3"
 
 	var a = map[string]interface{}{
 		key1: 1,
@@ -241,10 +243,8 @@ func TestMGetSlice(t *testing.T) {
 	require.Equal(t, nil, GetKeyError(err, key2))
 	require.Equal(t, ErrCacheMiss, GetKeyError(err, key3))
 }
-
-func TestClose(t *testing.T) {
-	cache := makeMemoryCache(t, NewConfig())
-	const key = "key"
+func testClose(t *testing.T, cache ICache) {
+	const key = "testClose"
 
 	err := cache.Close()
 	require.Nil(t, err)
@@ -253,7 +253,6 @@ func TestClose(t *testing.T) {
 	err = cache.Get(context.Background(), key, &b)
 	require.NotNil(t, err)
 }
-
 func BenchmarkGet(b *testing.B) {
 	keyCount := []struct {
 		name   string
