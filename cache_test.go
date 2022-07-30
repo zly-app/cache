@@ -276,10 +276,10 @@ func BenchmarkGet(b *testing.B) {
 		name string
 		serializer.ISerializer
 	}{
-		{"JsonIterStandardSerializer", JsonIterStandardSerializer},
+		{"MsgPackSerializer", MsgPackSerializer},
+		//{"JsonIterStandardSerializer", JsonIterStandardSerializer},
 		//{"JsonSerializer", JsonSerializer},
 		//{"JsonIterSerializer", JsonIterSerializer},
-		//{"MsgPackSerializer", MsgPackSerializer},
 		//{"YamlSerializer", YamlSerializer},
 	}
 	for _, k := range keyCount {
