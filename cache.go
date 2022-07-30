@@ -27,12 +27,12 @@ func (c *Cache) Close() error {
 	panic("implement me")
 }
 
-func (c *Cache) marshalQuery(aPtr interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) ([]byte, error) {
-	if aPtr == nil {
+func (c *Cache) marshalQuery(data interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) ([]byte, error) {
+	if data == nil {
 		return nil, nil
 	}
 
-	rawData, err := serializer.MarshalBytes(aPtr)
+	rawData, err := serializer.MarshalBytes(data)
 	if err != nil {
 		return nil, fmt.Errorf("序列化失败: %v", err)
 	}

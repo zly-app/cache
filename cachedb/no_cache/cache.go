@@ -30,9 +30,9 @@ func (n noCache) Set(ctx context.Context, key string, data []byte, expireSec int
 	return nil
 }
 
-func (n noCache) MSet(ctx context.Context, data map[string][]byte, expireSec int) map[string]error {
-	result := make(map[string]error, len(data))
-	for key := range data {
+func (n noCache) MSet(ctx context.Context, dataMap map[string][]byte, expireSec int) map[string]error {
+	result := make(map[string]error, len(dataMap))
+	for key := range dataMap {
 		result[key] = nil
 	}
 	return result

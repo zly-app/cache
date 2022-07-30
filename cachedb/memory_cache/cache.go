@@ -37,9 +37,9 @@ func (m *memoryCache) Set(ctx context.Context, key string, data []byte, expireSe
 	return m.cache.Set([]byte(key), data, expireSec)
 }
 
-func (m *memoryCache) MSet(ctx context.Context, data map[string][]byte, expireSec int) map[string]error {
-	result := make(map[string]error, len(data))
-	for q, v := range data {
+func (m *memoryCache) MSet(ctx context.Context, dataMap map[string][]byte, expireSec int) map[string]error {
+	result := make(map[string]error, len(dataMap))
+	for q, v := range dataMap {
 		result[q] = m.Set(ctx, q, v, expireSec)
 	}
 	return result

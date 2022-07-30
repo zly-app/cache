@@ -24,6 +24,26 @@ func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...c
 }
 
 func (c *Cache) MSet(ctx context.Context, dataMap map[string]interface{}, opts ...core.Option) map[string]error {
-	//TODO implement me
-	panic("implement me")
+	opt := c.newOptions(opts)
+	defer putOptions(opt)
+
+	data := make(map[string][]byte, len(dataMap))
+	result := make(map[string]error, len(dataMap))
+	for k, v := range dataMap {
+		bs, err := c.marshalQuery(v, opt.Serializer, opt.Compactor)
+		if err != nil {
+			result[k] = fmt.Errorf("编码数据失败: %v", err)
+			continue
+		}
+		data[k] = bs
+	}
+
+	if len(data) > 0 {
+		cacheResult := c.cacheDB.MSet(ctx, data, opt.ExpireSec)
+		for k := range data {
+			result[k] = cacheResult[k]
+		}
+	}
+
+	return result
 }

@@ -35,7 +35,7 @@ func TestSetGet(t *testing.T) {
 	var b []byte
 	err = cache.Get(context.Background(), key, &b)
 	require.Nil(t, err)
-	require.Equal(t, b, a)
+	require.Equal(t, a, b)
 }
 
 func TestDel(t *testing.T) {
@@ -46,9 +46,9 @@ func TestDel(t *testing.T) {
 	err := cache.Set(context.Background(), key, a)
 	require.Nil(t, err)
 
-	results := cache.Del(context.Background(), key)
-	require.Equal(t, 1, len(results))
-	require.Equal(t, nil, results[key])
+	delResults := cache.Del(context.Background(), key)
+	require.Equal(t, 1, len(delResults))
+	require.Equal(t, nil, delResults[key])
 
 	var b int
 	err = cache.Get(context.Background(), key, &b)
@@ -66,7 +66,7 @@ func TestExpire(t *testing.T) {
 	var b int
 	err = cache.Get(context.Background(), key, &b)
 	require.Nil(t, err)
-	require.Equal(t, b, a)
+	require.Equal(t, a, b)
 
 	time.Sleep(time.Second)
 
@@ -88,7 +88,7 @@ func TestDefaultExpire(t *testing.T) {
 	var b int
 	err = cache.Get(context.Background(), key, &b)
 	require.Nil(t, err)
-	require.Equal(t, b, a)
+	require.Equal(t, a, b)
 
 	time.Sleep(time.Second)
 
@@ -111,7 +111,32 @@ func TestLoadFn(t *testing.T) {
 	}))
 	require.Nil(t, err)
 	require.Equal(t, true, load)
-	require.Equal(t, b, a)
+	require.Equal(t, a, b)
+}
+
+func TestMSet(t *testing.T) {
+	cache := makeMemoryCache(t, NewConfig())
+	const key1 = "key1"
+	const key2 = "key2"
+
+	var a = map[string]interface{}{
+		key1: 1,
+		key2: 2,
+	}
+	mSetResult := cache.MSet(context.Background(), a)
+	require.Equal(t, 2, len(mSetResult))
+	require.Nil(t, mSetResult[key1])
+	require.Nil(t, mSetResult[key2])
+
+	var b int
+	err := cache.Get(context.Background(), key1, &b)
+	require.Nil(t, err)
+	require.Equal(t, a[key1], b)
+
+	var c int
+	err = cache.Get(context.Background(), key2, &c)
+	require.Nil(t, err)
+	require.Equal(t, a[key2], c)
 }
 
 func BenchmarkGet(b *testing.B) {
