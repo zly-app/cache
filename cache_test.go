@@ -146,7 +146,7 @@ func TestMSet(t *testing.T) {
 		key2: 2,
 	}
 	mSetResult := cache.MSet(context.Background(), a)
-	require.Equal(t, 2, len(mSetResult))
+	require.Equal(t, len(a), len(mSetResult))
 	require.Nil(t, mSetResult[key1])
 	require.Nil(t, mSetResult[key2])
 
@@ -159,6 +159,63 @@ func TestMSet(t *testing.T) {
 	err = cache.Get(context.Background(), key2, &c)
 	require.Nil(t, err)
 	require.Equal(t, a[key2], c)
+}
+
+func TestMGet(t *testing.T) {
+	cache := makeMemoryCache(t, NewConfig())
+	const key1 = "key1"
+	const key2 = "key2"
+	const key3 = "key3"
+
+	var a = 1
+	err := cache.Set(context.Background(), key1, a)
+	require.Nil(t, err)
+
+	var b1, b2, b3 int
+	b := map[string]interface{}{
+		key1: &b1,
+		key2: &b2,
+		key3: &b3,
+	}
+	result := cache.MGet(context.Background(), b)
+	require.Equal(t, len(b), len(result))
+	require.Equal(t, 1, b1)
+	require.Equal(t, nil, result[key1])
+	require.Equal(t, 0, b2)
+	require.Equal(t, ErrCacheMiss, result[key2])
+	require.Equal(t, 0, b3)
+	require.Equal(t, ErrCacheMiss, result[key3])
+
+	var c1, c2, c3 int
+	var loadC2, loadC3, loadOther bool
+	c := map[string]interface{}{
+		key1: &c1,
+		key2: &c2,
+		key3: &c3,
+	}
+	var loadFn = func(ctx context.Context, key string) (interface{}, error) {
+		switch key {
+		case key2:
+			loadC2 = true
+			return 2, nil
+		case key3:
+			loadC3 = true
+			return nil, nil
+		}
+		loadOther = true
+		return nil, fmt.Errorf("意外的加载key: %v", err)
+	}
+	result = cache.MGet(context.Background(), c, WithLoadFn(loadFn))
+	require.Equal(t, len(c), len(result))
+	require.Equal(t, false, loadOther)
+	require.Equal(t, true, loadC2)
+	require.Equal(t, true, loadC3)
+	require.Equal(t, 1, c1)
+	require.Equal(t, nil, result[key1])
+	require.Equal(t, 2, c2)
+	require.Equal(t, nil, result[key2])
+	require.Equal(t, 0, c3)
+	require.Equal(t, ErrDataIsNil, result[key3])
 }
 
 func TestClose(t *testing.T) {

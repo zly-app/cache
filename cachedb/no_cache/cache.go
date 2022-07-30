@@ -18,10 +18,10 @@ func (n noCache) Get(ctx context.Context, key string) ([]byte, error) {
 	return nil, errs.CacheMiss
 }
 
-func (n noCache) MGet(ctx context.Context, keys ...string) map[string]*core.CacheResult {
-	result := make(map[string]*core.CacheResult, len(keys))
+func (n noCache) MGet(ctx context.Context, keys ...string) map[string]core.CacheResult {
+	result := make(map[string]core.CacheResult, len(keys))
 	for _, key := range keys {
-		result[key] = &core.CacheResult{Err: errs.CacheMiss}
+		result[key] = core.CacheResult{Err: errs.CacheMiss}
 	}
 	return result
 }

@@ -9,7 +9,6 @@ import (
 
 	"github.com/zly-app/cache/cachedb/memory_cache"
 	"github.com/zly-app/cache/core"
-	"github.com/zly-app/cache/errs"
 	"github.com/zly-app/cache/single_flight"
 )
 
@@ -45,7 +44,7 @@ func (c *Cache) marshalQuery(data interface{}, serializer serializer.ISerializer
 
 func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) error {
 	if len(comData) == 0 {
-		return errs.DataIsNil
+		return ErrDataIsNil
 	}
 
 	rawData, err := compactor.UnCompressBytes(comData)

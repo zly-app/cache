@@ -24,11 +24,11 @@ func (m *memoryCache) Get(ctx context.Context, key string) ([]byte, error) {
 	return data, err
 }
 
-func (m *memoryCache) MGet(ctx context.Context, keys ...string) map[string]*core.CacheResult {
-	result := make(map[string]*core.CacheResult, len(keys))
+func (m *memoryCache) MGet(ctx context.Context, keys ...string) map[string]core.CacheResult {
+	result := make(map[string]core.CacheResult, len(keys))
 	for _, key := range keys {
 		data, err := m.Get(ctx, key)
-		result[key] = &core.CacheResult{Data: data, Err: err}
+		result[key] = core.CacheResult{Data: data, Err: err}
 	}
 	return result
 }

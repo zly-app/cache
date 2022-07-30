@@ -14,7 +14,7 @@ type ICacheDB interface {
 	// 获取一个值
 	Get(ctx context.Context, key string) ([]byte, error)
 	// 批量获取
-	MGet(ctx context.Context, keys ...string) map[string]*CacheResult
+	MGet(ctx context.Context, keys ...string) map[string]CacheResult
 
 	// 设置一个值, expireSec <= 0 时表示永不过期
 	Set(ctx context.Context, key string, data []byte, expireSec int) error
