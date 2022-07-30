@@ -52,8 +52,9 @@ func main() {
 
 # 支持的缓存数据库
 
-+ [no-cache](./cachedb/no_cache/cache.go)
-+ [memory-cache](./cachedb/memory_cache/cache.go)
++ [no](./cachedb/no_cache/cache.go)
++ [memory](./cachedb/memory_cache/cache.go)
++ [redis](./cachedb/redis_cache/cache.go)
 
 # 支持的序列化器
 

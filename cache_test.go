@@ -24,6 +24,17 @@ func makeMemoryCache() ICache {
 	return cache
 }
 
+func makeRedisCache() ICache {
+	conf := NewConfig()
+	conf.CacheDB.Type = "redis"
+	conf.CacheDB.Redis.Address = "127.0.0.1:6379"
+	cache, err := NewCache(conf)
+	if err != nil {
+		panic(fmt.Errorf("创建Cache失败: %v", err))
+	}
+	return cache
+}
+
 func TestMemoryCache(t *testing.T) {
 	t.Run("testSetGet", func(t *testing.T) { testSetGet(t, makeMemoryCache()) })
 	t.Run("testSetGetSlice", func(t *testing.T) { testSetGetSlice(t, makeMemoryCache()) })
@@ -43,6 +54,18 @@ func TestMemoryCache(t *testing.T) {
 	t.Run("testMGet", func(t *testing.T) { testMGet(t, makeMemoryCache()) })
 	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeMemoryCache()) })
 	t.Run("testClose", func(t *testing.T) { testClose(t, makeMemoryCache()) })
+}
+
+func TestRedisCache(t *testing.T) {
+	t.Run("testSetGet", func(t *testing.T) { testSetGet(t, makeRedisCache()) })
+	t.Run("testSetGetSlice", func(t *testing.T) { testSetGetSlice(t, makeRedisCache()) })
+	t.Run("testDel", func(t *testing.T) { testDel(t, makeRedisCache()) })
+	t.Run("testExpire", func(t *testing.T) { testExpire(t, makeRedisCache()) })
+	t.Run("testLoadFn", func(t *testing.T) { testLoadFn(t, makeRedisCache()) })
+	t.Run("testMSet", func(t *testing.T) { testMSet(t, makeRedisCache()) })
+	t.Run("testMGet", func(t *testing.T) { testMGet(t, makeRedisCache()) })
+	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeRedisCache()) })
+	t.Run("testClose", func(t *testing.T) { testClose(t, makeRedisCache()) })
 }
 
 func testSetGet(t *testing.T, cache ICache) {
