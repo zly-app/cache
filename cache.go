@@ -1,7 +1,9 @@
 package cache
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/zly-app/zapp/pkg/compactor"
@@ -61,7 +63,55 @@ func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer seri
 
 func (c *Cache) unmarshalMQuerySlice(keys []string, cacheResults map[string]core.CacheResult, slicePtr interface{},
 	serializer serializer.ISerializer, compactor compactor.ICompactor) map[string]error {
-	panic("未实现")
+	// 类型检查
+	sliceType := reflect.TypeOf(slicePtr)
+	if sliceType.Kind() != reflect.Ptr {
+		panic(errors.New("slicePtr必须是带指针的切片"))
+	}
+	sliceType = sliceType.Elem()
+	if sliceType.Kind() != reflect.Slice {
+		panic(errors.New("slicePtr必须是带指针的切片"))
+	}
+
+	// 值检查
+	sliceValue := reflect.ValueOf(slicePtr).Elem()
+	if sliceValue.Len() != 0 {
+		panic(errors.New("slicePtr的长度必须为0"))
+	}
+	if sliceValue.Kind() == reflect.Invalid {
+		panic(errors.New("slicePtr中子类型无法访问"))
+	}
+
+	// 获取子类型
+	itemType := sliceType.Elem()                // 获取子类型
+	itemIsPtr := itemType.Kind() == reflect.Ptr // 检查子类型是否为指针
+	if itemIsPtr {
+		itemType = itemType.Elem() // 获取指针指向的真正的子类型
+	}
+
+	// 数据处理
+	result := make(map[string]error, len(cacheResults))
+	items := make([]reflect.Value, 0, len(cacheResults))
+	for _, key := range keys {
+		cacheResult, ok := cacheResults[key]
+		if !ok || cacheResult.Err != nil { // 只处理正常的数据
+			continue
+		}
+
+		child := reflect.New(itemType) // 创建一个相同类型的指针
+		err := c.unmarshalQuery(cacheResult.Data, child.Interface(), serializer, compactor)
+		if err == nil {
+			if !itemIsPtr {
+				child = child.Elem() // 如果想要的不是指针那么获取它的内容
+			}
+			items = append(items, child)
+		}
+		result[key] = err
+	}
+
+	values := reflect.Append(sliceValue, items...) // 构建内容切片
+	sliceValue.Set(values)                         // 将内容切片写入原始切片中
+	return result
 }
 
 func NewCache(conf *Config) (ICache, error) {

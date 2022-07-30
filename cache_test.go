@@ -215,6 +215,33 @@ func TestMGet(t *testing.T) {
 	require.Equal(t, ErrDataIsNil, GetKeyError(err, key3))
 }
 
+func TestMGetSlice(t *testing.T) {
+	cache := makeMemoryCache(t, NewConfig())
+	const key1 = "key1"
+	const key2 = "key2"
+	const key3 = "key3"
+
+	var a = map[string]interface{}{
+		key1: 1,
+		key2: 2,
+	}
+	err := cache.MSet(context.Background(), a)
+	require.Nil(t, err)
+
+	var b []int
+	err = cache.MGetSlice(context.Background(), []string{key1, key2}, &b)
+	require.Nil(t, err)
+	require.Equal(t, []int{1, 2}, b)
+
+	var c []int
+	err = cache.MGetSlice(context.Background(), []string{key1, key2, key3}, &c)
+	require.NotNil(t, err)
+	require.Equal(t, []int{1, 2}, c)
+	require.Equal(t, nil, GetKeyError(err, key1))
+	require.Equal(t, nil, GetKeyError(err, key2))
+	require.Equal(t, ErrCacheMiss, GetKeyError(err, key3))
+}
+
 func TestClose(t *testing.T) {
 	cache := makeMemoryCache(t, NewConfig())
 	const key = "key"

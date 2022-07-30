@@ -61,7 +61,7 @@ func NewQueryErr(errs map[string]error) error {
 func GetKeyError(err error, key string) error {
 	qe, ok := err.(QueryErr)
 	if !ok {
-		return nil
+		return err
 	}
 	return qe.GetError(key)
 }
