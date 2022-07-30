@@ -1,8 +1,6 @@
 package cache
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 	"strings"
 
@@ -24,11 +22,6 @@ type Cache struct {
 	ignoreCacheFault bool               // 是否忽略缓存数据库故障
 }
 
-func (c *Cache) Del(ctx context.Context, keys ...string) map[string]error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (c *Cache) Close() error {
 	//TODO implement me
 	panic("implement me")
@@ -39,32 +32,29 @@ func (c *Cache) marshalQuery(aPtr interface{}, serializer serializer.ISerializer
 		return nil, nil
 	}
 
-	var rawData bytes.Buffer
-	err := serializer.Marshal(aPtr, &rawData)
+	rawData, err := serializer.MarshalBytes(aPtr)
 	if err != nil {
 		return nil, fmt.Errorf("序列化失败: %v", err)
 	}
 
-	var comData bytes.Buffer
-	err = compactor.Compress(&rawData, &comData)
+	comData, err := compactor.CompressBytes(rawData)
 	if err != nil {
 		return nil, fmt.Errorf("压缩失败: %v", err)
 	}
-	return comData.Bytes(), nil
+	return comData, nil
 }
 
-func (c *Cache) unmarshalQuery(data []byte, aPtr interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) error {
-	if len(data) == 0 {
+func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) error {
+	if len(comData) == 0 {
 		return errs.DataIsNil
 	}
 
-	var rawData bytes.Buffer
-	err := compactor.UnCompress(bytes.NewReader(data), &rawData)
+	rawData, err := compactor.UnCompressBytes(comData)
 	if err != nil {
 		return fmt.Errorf("解压缩失败: %v", err)
 	}
 
-	err = serializer.Unmarshal(&rawData, aPtr)
+	err = serializer.UnmarshalBytes(rawData, aPtr)
 	if err != nil {
 		return fmt.Errorf("反序列化失败: %v", err)
 	}
@@ -84,7 +74,7 @@ func NewCache(conf *Config) (core.ICache, error) {
 
 	switch v := strings.ToLower(conf.CacheDB.Type); v {
 	case "memory":
-		memory_cache.NewMemoryCache(conf.CacheDB.Memory.SizeMB)
+		cache.cacheDB = memory_cache.NewMemoryCache(conf.CacheDB.Memory.SizeMB)
 	case "redis":
 		return nil, fmt.Errorf("暂未实现redis缓存数据库")
 	}

@@ -14,6 +14,8 @@ import (
 
 func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
+	defer putOptions(opt)
+
 	bs, cacheErr := c.cacheDB.Get(ctx, key)
 	if cacheErr == nil {
 		return c.unmarshalQuery(bs, aPtr, opt.Serializer, opt.Compactor)
@@ -47,7 +49,7 @@ func (c *Cache) MGetSlice(ctx context.Context, keys []string, slicePtr interface
 	panic("implement me")
 }
 
-func (c *Cache) load(ctx context.Context, key string, opt options) core.LoadInvoke {
+func (c *Cache) load(ctx context.Context, key string, opt *options) core.LoadInvoke {
 	return func(ctx context.Context, key string) (bs []byte, err error) {
 		err = utils.Recover.WrapCall(func() error {
 			// 加载数据

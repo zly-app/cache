@@ -15,9 +15,9 @@ type ICache interface {
 	MGetSlice(ctx context.Context, keys []string, slicePtr interface{}, opts ...Option) map[string]error
 
 	// 设置数据
-	Set(ctx context.Context, key string, aPtr interface{}, opts ...Option) error
+	Set(ctx context.Context, key string, data interface{}, opts ...Option) error
 	// 批量设置数据
-	MSet(ctx context.Context, aPtrMap map[string]interface{}, opts ...Option) map[string]error
+	MSet(ctx context.Context, dataMap map[string]interface{}, opts ...Option) map[string]error
 
 	// 删除
 	Del(ctx context.Context, keys ...string) map[string]error
