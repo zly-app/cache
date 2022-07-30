@@ -13,11 +13,10 @@ import (
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
-	"github.com/zly-app/cache/core"
 	"github.com/zly-app/cache/errs"
 )
 
-func makeMemoryCache(t *testing.T, conf *Config) core.ICache {
+func makeMemoryCache(t *testing.T, conf *Config) ICache {
 	cache, err := NewCache(conf)
 	if err != nil {
 		t.Fatalf("创建Cache失败: %v", err)
