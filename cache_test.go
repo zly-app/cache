@@ -28,11 +28,33 @@ func TestSetGet(t *testing.T) {
 	cache := makeMemoryCache(t, NewConfig())
 	const key = "key"
 
-	var a = []byte("hello")
+	var a = 3
 	err := cache.Set(context.Background(), key, a)
 	require.Nil(t, err)
 
-	var b []byte
+	var b int
+	err = cache.Get(context.Background(), key, &b)
+	require.Nil(t, err)
+	require.Equal(t, a, b)
+}
+
+func TestSetGetSlice(t *testing.T) {
+	cache := makeMemoryCache(t, NewConfig())
+	const key = "key"
+
+	type A struct {
+		A int
+	}
+
+	var a = []A{
+		{1},
+		{2},
+		{3},
+	}
+	err := cache.Set(context.Background(), key, a)
+	require.Nil(t, err)
+
+	var b []A
 	err = cache.Get(context.Background(), key, &b)
 	require.Nil(t, err)
 	require.Equal(t, a, b)
