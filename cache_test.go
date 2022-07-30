@@ -139,6 +139,18 @@ func TestMSet(t *testing.T) {
 	require.Equal(t, a[key2], c)
 }
 
+func TestClose(t *testing.T) {
+	cache := makeMemoryCache(t, NewConfig())
+	const key = "key"
+
+	err := cache.Close()
+	require.Nil(t, err)
+
+	var b []byte
+	err = cache.Get(context.Background(), key, &b)
+	require.NotNil(t, err)
+}
+
 func BenchmarkGet(b *testing.B) {
 	keyCount := []struct {
 		name   string

@@ -23,8 +23,7 @@ type Cache struct {
 }
 
 func (c *Cache) Close() error {
-	//TODO implement me
-	panic("implement me")
+	return c.cacheDB.Close()
 }
 
 func (c *Cache) marshalQuery(data interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) ([]byte, error) {
