@@ -1,13 +1,15 @@
 package no_sf
 
 import (
+	"context"
+
 	"github.com/zly-app/cache/core"
 )
 
 type NoSingleFlight struct{}
 
-func (n NoSingleFlight) Do(cacheDB core.ICacheDB, key string, invoke func(cacheDB core.ICacheDB, key string) ([]byte, error)) ([]byte, error) {
-	return invoke(cacheDB, key)
+func (n NoSingleFlight) Do(ctx context.Context, key string, invoke core.LoadInvoke) ([]byte, error) {
+	return invoke(ctx, key)
 }
 
 // 一个关闭并发查询控制的ISingleFlight

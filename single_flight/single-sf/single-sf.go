@@ -1,6 +1,7 @@
 package single_sf
 
 import (
+	"context"
 	"errors"
 	"hash/fnv"
 	"sync"
@@ -55,7 +56,7 @@ func (m *SingleFlight) getShard(key string) (*sync.RWMutex, map[string]*waitResu
 	return m.mxs[shard], m.waits[shard]
 }
 
-func (m *SingleFlight) Do(cacheDB core.ICacheDB, key string, invoke func(cacheDB core.ICacheDB, key string) ([]byte, error)) ([]byte, error) {
+func (m *SingleFlight) Do(ctx context.Context, key string, invoke core.LoadInvoke) ([]byte, error) {
 	mx, wait := m.getShard(key)
 
 	mx.RLock()
@@ -85,7 +86,7 @@ func (m *SingleFlight) Do(cacheDB core.ICacheDB, key string, invoke func(cacheDB
 	mx.Unlock()
 
 	// 执行db加载
-	result.v, result.e = invoke(cacheDB, key)
+	result.v, result.e = invoke(ctx, key)
 	result.wg.Done()
 
 	// 删除位置

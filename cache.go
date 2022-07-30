@@ -53,21 +53,18 @@ func (c *Cache) marshalQuery(aPtr interface{}, serializer serializer.ISerializer
 	return comData.Bytes(), nil
 }
 
-func (c *Cache) unmarshalQuery(a interface{}, value *core.CacheResult, serializer serializer.ISerializer, compactor compactor.ICompactor) error {
-	if value.Err != nil {
-		return value.Err
-	}
-	if len(value.Data) == 0 {
+func (c *Cache) unmarshalQuery(data []byte, aPtr interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) error {
+	if len(data) == 0 {
 		return errs.DataIsNil
 	}
 
 	var rawData bytes.Buffer
-	err := compactor.UnCompress(bytes.NewReader(value.Data), &rawData)
+	err := compactor.UnCompress(bytes.NewReader(data), &rawData)
 	if err != nil {
 		return fmt.Errorf("解压缩失败: %v", err)
 	}
 
-	err = serializer.Unmarshal(&rawData, a)
+	err = serializer.Unmarshal(&rawData, aPtr)
 	if err != nil {
 		return fmt.Errorf("反序列化失败: %v", err)
 	}
