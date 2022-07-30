@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/errs"
 )
 
 func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
@@ -41,7 +42,7 @@ func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...c
 	return c.unmarshalQuery(bs, aPtr, opt.Serializer, opt.Compactor)
 }
 
-func (c *Cache) MGet(ctx context.Context, aPtrMap map[string]interface{}, opts ...core.Option) map[string]error {
+func (c *Cache) MGet(ctx context.Context, aPtrMap map[string]interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
@@ -69,7 +70,10 @@ func (c *Cache) MGet(ctx context.Context, aPtrMap map[string]interface{}, opts .
 		}
 
 		if cacheResult.Err == nil {
-			result[key] = c.unmarshalQuery(cacheResult.Data, aPtrList[index], opt.Serializer, opt.Compactor)
+			err := c.unmarshalQuery(cacheResult.Data, aPtrList[index], opt.Serializer, opt.Compactor)
+			if err != nil {
+				result[key] = err
+			}
 			continue
 		}
 
@@ -83,24 +87,69 @@ func (c *Cache) MGet(ctx context.Context, aPtrMap map[string]interface{}, opts .
 
 	// 如果不需要额外加载或者加载数据函数为空则直接返回
 	if len(needLoadKeys) == 0 || opt.LoadFn == nil {
-		return result
+		return errs.NewQueryErr(result)
 	}
 
 	// 加载数据
 	for _, key := range needLoadKeys {
 		bs, err := c.sf.Do(ctx, key, c.load(opt))
 		if err != nil {
-			result[key] = err
+			result[key] = err // 重新设置err
 			continue
 		}
 		result[key] = c.unmarshalQuery(bs, aPtrMap[key], opt.Serializer, opt.Compactor)
 	}
-	return result
+	return errs.NewQueryErr(result)
 }
 
-func (c *Cache) MGetSlice(ctx context.Context, keys []string, slicePtr interface{}, opts ...core.Option) map[string]error {
-	//TODO implement me
-	panic("implement me")
+func (c *Cache) MGetSlice(ctx context.Context, keys []string, slicePtr interface{}, opts ...core.Option) error {
+	opt := c.newOptions(opts)
+	defer putOptions(opt)
+
+	// 从缓存获取结果
+	cacheResults := c.cacheDB.MGet(ctx, keys...)
+
+	// 整理已得到的结果
+	result := make(map[string]error, len(keys))  // 结果数据
+	needLoadKeys := make([]string, 0, len(keys)) // 需要额外加载的key
+	for _, key := range keys {
+		cacheResult, ok := cacheResults[key]
+		if !ok || cacheResult.Err == ErrCacheMiss {
+			result[key] = ErrCacheMiss
+			needLoadKeys = append(needLoadKeys, key)
+			continue
+		}
+
+		if cacheResult.Err == nil {
+			continue
+		}
+
+		// 缓存故障
+		result[key] = fmt.Errorf("从缓存数据库加载数据故障: err: %v", cacheResult.Err)
+		if c.ignoreCacheFault { // 如果忽略缓存故障, 则这些key也需要加载数据
+			logger.Log.Error("从缓存数据库加载数据故障", zap.String("key", key), zap.Error(cacheResult.Err))
+			needLoadKeys = append(needLoadKeys, key)
+		}
+	}
+
+	// 加载数据
+	if len(needLoadKeys) > 0 && opt.LoadFn != nil {
+		for _, key := range needLoadKeys {
+			bs, err := c.sf.Do(ctx, key, c.load(opt))
+			if err != nil {
+				result[key] = err // 重新设置err
+				continue
+			}
+			cacheResults[key] = core.CacheResult{Data: bs} // 替换数据
+		}
+	}
+
+	// 反序列化
+	unResults := c.unmarshalMQuerySlice(keys, cacheResults, slicePtr, opt.Serializer, opt.Compactor)
+	for key, err := range unResults {
+		result[key] = err // 重新设置err
+	}
+	return errs.NewQueryErr(result)
 }
 
 func (c *Cache) load(opt *options) core.LoadInvoke {

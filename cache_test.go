@@ -68,9 +68,8 @@ func TestDel(t *testing.T) {
 	err := cache.Set(context.Background(), key, a)
 	require.Nil(t, err)
 
-	delResults := cache.Del(context.Background(), key)
-	require.Equal(t, 1, len(delResults))
-	require.Equal(t, nil, delResults[key])
+	err = cache.Del(context.Background(), key)
+	require.Nil(t, err)
 
 	var b int
 	err = cache.Get(context.Background(), key, &b)
@@ -145,13 +144,11 @@ func TestMSet(t *testing.T) {
 		key1: 1,
 		key2: 2,
 	}
-	mSetResult := cache.MSet(context.Background(), a)
-	require.Equal(t, len(a), len(mSetResult))
-	require.Nil(t, mSetResult[key1])
-	require.Nil(t, mSetResult[key2])
+	err := cache.MSet(context.Background(), a)
+	require.Nil(t, err)
 
 	var b int
-	err := cache.Get(context.Background(), key1, &b)
+	err = cache.Get(context.Background(), key1, &b)
 	require.Nil(t, err)
 	require.Equal(t, a[key1], b)
 
@@ -177,14 +174,14 @@ func TestMGet(t *testing.T) {
 		key2: &b2,
 		key3: &b3,
 	}
-	result := cache.MGet(context.Background(), b)
-	require.Equal(t, len(b), len(result))
+	err = cache.MGet(context.Background(), b)
+	require.NotNil(t, err)
 	require.Equal(t, 1, b1)
-	require.Equal(t, nil, result[key1])
+	require.Equal(t, nil, GetKeyError(err, key1))
 	require.Equal(t, 0, b2)
-	require.Equal(t, ErrCacheMiss, result[key2])
+	require.Equal(t, ErrCacheMiss, GetKeyError(err, key2))
 	require.Equal(t, 0, b3)
-	require.Equal(t, ErrCacheMiss, result[key3])
+	require.Equal(t, ErrCacheMiss, GetKeyError(err, key3))
 
 	var c1, c2, c3 int
 	var loadC2, loadC3, loadOther bool
@@ -205,17 +202,17 @@ func TestMGet(t *testing.T) {
 		loadOther = true
 		return nil, fmt.Errorf("意外的加载key: %v", err)
 	}
-	result = cache.MGet(context.Background(), c, WithLoadFn(loadFn))
-	require.Equal(t, len(c), len(result))
+	err = cache.MGet(context.Background(), c, WithLoadFn(loadFn))
+	require.NotNil(t, err)
 	require.Equal(t, false, loadOther)
 	require.Equal(t, true, loadC2)
 	require.Equal(t, true, loadC3)
 	require.Equal(t, 1, c1)
-	require.Equal(t, nil, result[key1])
+	require.Equal(t, nil, GetKeyError(err, key1))
 	require.Equal(t, 2, c2)
-	require.Equal(t, nil, result[key2])
+	require.Equal(t, nil, GetKeyError(err, key2))
 	require.Equal(t, 0, c3)
-	require.Equal(t, ErrDataIsNil, result[key3])
+	require.Equal(t, ErrDataIsNil, GetKeyError(err, key3))
 }
 
 func TestClose(t *testing.T) {

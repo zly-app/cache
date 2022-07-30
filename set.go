@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/errs"
 )
 
 func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...core.Option) error {
@@ -23,7 +24,7 @@ func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...c
 	return nil
 }
 
-func (c *Cache) MSet(ctx context.Context, dataMap map[string]interface{}, opts ...core.Option) map[string]error {
+func (c *Cache) MSet(ctx context.Context, dataMap map[string]interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
@@ -41,9 +42,12 @@ func (c *Cache) MSet(ctx context.Context, dataMap map[string]interface{}, opts .
 	if len(data) > 0 {
 		cacheResult := c.cacheDB.MSet(ctx, data, opt.ExpireSec)
 		for k := range data {
-			result[k] = cacheResult[k]
+			err := cacheResult[k]
+			if err != nil {
+				result[k] = err
+			}
 		}
 	}
 
-	return result
+	return errs.NewQueryErr(result)
 }

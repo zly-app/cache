@@ -59,6 +59,11 @@ func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer seri
 	return nil
 }
 
+func (c *Cache) unmarshalMQuerySlice(keys []string, cacheResults map[string]core.CacheResult, slicePtr interface{},
+	serializer serializer.ISerializer, compactor compactor.ICompactor) map[string]error {
+	panic("未实现")
+}
+
 func NewCache(conf *Config) (ICache, error) {
 	err := conf.Check()
 	if err != nil {
