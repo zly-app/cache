@@ -22,7 +22,7 @@ type ICacheDB interface {
 	MSet(ctx context.Context, data map[string][]byte, expireSec int) map[string]error
 
 	// 删除数据
-	Del(ctx context.Context, keys ...string) map[string]error
+	Del(ctx context.Context, keys ...string) error
 
 	// 关闭
 	Close() error

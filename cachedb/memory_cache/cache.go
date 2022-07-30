@@ -45,13 +45,11 @@ func (m *memoryCache) MSet(ctx context.Context, dataMap map[string][]byte, expir
 	return result
 }
 
-func (m *memoryCache) Del(ctx context.Context, keys ...string) map[string]error {
-	result := make(map[string]error, len(keys))
+func (m *memoryCache) Del(ctx context.Context, keys ...string) error {
 	for _, key := range keys {
 		_ = m.cache.Del([]byte(key))
-		result[key] = nil
 	}
-	return result
+	return nil
 }
 
 func (m *memoryCache) Close() error {

@@ -6,10 +6,12 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/zly-app/component/redis"
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
 	"github.com/zly-app/cache/cachedb/memory_cache"
+	"github.com/zly-app/cache/cachedb/redis_cache"
 	"github.com/zly-app/cache/core"
 	"github.com/zly-app/cache/single_flight"
 )
@@ -129,7 +131,23 @@ func NewCache(conf *Config) (ICache, error) {
 	case "memory":
 		cache.cacheDB = memory_cache.NewMemoryCache(conf.CacheDB.Memory.SizeMB)
 	case "redis":
-		return nil, fmt.Errorf("暂未实现redis缓存数据库")
+		redisClient, err := redis.MakeRedisClient(&redis.RedisConfig{
+			Address:         conf.CacheDB.Redis.Address,
+			UserName:        conf.CacheDB.Redis.UserName,
+			Password:        conf.CacheDB.Redis.Password,
+			DB:              conf.CacheDB.Redis.DB,
+			IsCluster:       conf.CacheDB.Redis.IsCluster,
+			MinIdleConns:    conf.CacheDB.Redis.MinIdleConns,
+			PoolSize:        conf.CacheDB.Redis.PoolSize,
+			ReadTimeout:     conf.CacheDB.Redis.ReadTimeoutSec * 1000,
+			WriteTimeout:    conf.CacheDB.Redis.WriteTimeoutSec * 1000,
+			DialTimeout:     conf.CacheDB.Redis.DialTimeoutSec * 1000,
+			EnableOpenTrace: false,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("创建redis客户端失败: %v", err)
+		}
+		cache.cacheDB = redis_cache.NewRedisCache(redisClient)
 	}
 
 	cache.compactor = compactor.GetCompactor(strings.ToLower(conf.Compactor))

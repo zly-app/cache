@@ -38,12 +38,8 @@ func (n noCache) MSet(ctx context.Context, dataMap map[string][]byte, expireSec 
 	return result
 }
 
-func (n noCache) Del(ctx context.Context, keys ...string) map[string]error {
-	result := make(map[string]error, len(keys))
-	for _, key := range keys {
-		result[key] = nil
-	}
-	return result
+func (n noCache) Del(ctx context.Context, keys ...string) error {
+	return nil
 }
 
 func (n noCache) Close() error {
