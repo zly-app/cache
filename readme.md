@@ -18,6 +18,34 @@ func main() {
 }
 ```
 
+# 二级缓存
+
+```go
+func main() {
+	cache1, _ := cache.NewCache(cache.NewConfig()) // 一级缓存
+	cache2, _ := cache.NewCache(cache.NewConfig()) // 二级缓存
+
+	var a string
+	_ = cache1.Get(context.Background(), "key", &a,
+		// 设置一级缓存加载数据的方式
+		cache.WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
+			// 在加载数据函数中调用二级缓存获取数据
+			var result string
+			err := cache2.Get(ctx, key, &result,
+				// 在二级缓存中添加从db加载数据的方式
+				cache.WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
+					return "hello", nil // 模拟db返回数据
+				}),
+			)
+			return result, err
+		}),
+	)
+
+	print(a) // hello
+}
+```
+
+
 # 支持的数据库
 
 + 支持任何数据库, 不关心用户如何加载数据
