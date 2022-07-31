@@ -29,14 +29,14 @@ type cacheCreatorAdapter struct {
 }
 
 func (c *cacheCreatorAdapter) GetCache(name string) ICache {
-	return c.conn.GetInstance(c.makeClient, name).(*instance).cache
+	return c.conn.GetInstance(c.makeCache, name).(*instance).cache
 }
 
 func (c *cacheCreatorAdapter) Close() {
 	c.conn.CloseAll()
 }
 
-func (c *cacheCreatorAdapter) makeClient(name string) (conn.IInstance, error) {
+func (c *cacheCreatorAdapter) makeCache(name string) (conn.IInstance, error) {
 	conf := NewConfig()
 	err := c.app.GetConfig().ParseComponentConfig(defComponentType, name, conf, true)
 	if err != nil {
@@ -50,7 +50,7 @@ func (c *cacheCreatorAdapter) makeClient(name string) (conn.IInstance, error) {
 	return &instance{cache: cache}, nil
 }
 
-func NewClientCreator(app core.IApp) ICacheCreator {
+func NewCacheCreator(app core.IApp) ICacheCreator {
 	creator := &cacheCreatorAdapter{
 		app:  app,
 		conn: conn.NewConn(),

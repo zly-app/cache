@@ -45,6 +45,49 @@ func main() {
 }
 ```
 
+# zapp 组件接入
+
+```go
+func main() {
+	app := zapp.NewApp("test")
+	defer app.Exit()
+
+	creator := cache.NewCacheCreator(app) // 创建cache建造者
+
+	cache := creator.GetCache("default") // 通过cache建造者获取cache
+}
+```
+
+## 添加配置文件 `configs/default.yml`. 更多配置说明参考[这里](./config.go)
+
+```yaml
+components:
+  cache:
+    default:
+      Compactor: raw # 默认压缩器名, 可选 raw, zstd, gzip
+      Serializer: msgpack # 默认序列化器名, 可选 msgpack, jsoniter_standard, jsoniter, json, yaml
+      SingleFlight: single # 默认单跑模块, 可选 no, single
+      ExpireSec: 0 # 默认有效时间, 秒, <= 0 表示永久
+      IgnoreCacheFault: false # 是否忽略缓存数据库故障, 如果设为true, 在缓存数据库故障时从加载器获取数据, 这会导致缓存击穿. 如果设为false, 在缓存数据库故障时直接返回错误
+      CacheDB:
+        Type: memory # 缓存数据库类型, 支持 no, memory, redis
+        Memory: # memory 内存配置
+          SizeMB: 1 # 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
+        Redis: # redis 内存配置
+          Address: 127.0.0.1:6379 # 地址: host1:port1,host2:port2
+          UserName: '' # 用户名
+          Password: '' # 密码
+          DB: 0 # db, 只有非集群有效
+          IsCluster: false # 是否为集群
+          MinIdleConns: 2 # 最小空闲连接数
+          PoolSize: 5 # 客户端池大小
+          ReadTimeoutSec: 5 # 读取超时, 单位秒
+          WriteTimeoutSec: 5 # 写入超时, 单位秒
+          DialTimeoutSec: 5 # 连接超时, 单位秒
+```
+
+
+
 
 # 支持的数据库
 
