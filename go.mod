@@ -4,8 +4,9 @@ go 1.17
 
 require (
 	github.com/coocood/freecache v1.2.1
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/stretchr/testify v1.8.0
-	github.com/zly-app/component/redis v0.0.0-20220726031533-a3f06ebd3e93
+	github.com/zly-app/component/redis v0.0.0-20220731061405-eddf47c1889f
 	github.com/zly-app/zapp v1.1.16
 	go.uber.org/zap v1.21.0
 )
@@ -23,7 +24,6 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/afero v1.1.2 // indirect

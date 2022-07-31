@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	open_log "github.com/opentracing/opentracing-go/log"
 	"github.com/zly-app/zapp/logger"
 	"github.com/zly-app/zapp/pkg/utils"
 	"go.uber.org/zap"
@@ -13,6 +14,24 @@ import (
 )
 
 func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
+	if c.disableOpenTrace {
+		return c.get(ctx, key, aPtr, opts...)
+	}
+
+	span := utils.Trace.GetChildSpan(ctx, "cache.Get")
+	defer span.Finish()
+	ctx = utils.Trace.SaveSpan(ctx, span)
+
+	span.LogFields(open_log.String("key", key))
+
+	err := c.get(ctx, key, aPtr, opts...)
+	if err != nil {
+		span.SetTag("error", true)
+		span.LogFields(open_log.Error(err))
+	}
+	return err
+}
+func (c *Cache) get(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
@@ -43,6 +62,28 @@ func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...c
 }
 
 func (c *Cache) MGet(ctx context.Context, aPtrMap map[string]interface{}, opts ...core.Option) error {
+	if c.disableOpenTrace {
+		return c.mGet(ctx, aPtrMap, opts...)
+	}
+
+	span := utils.Trace.GetChildSpan(ctx, "cache.MGet")
+	defer span.Finish()
+	ctx = utils.Trace.SaveSpan(ctx, span)
+
+	keys := make([]string, 0, len(aPtrMap))
+	for k := range aPtrMap {
+		keys = append(keys, k)
+	}
+	span.LogFields(open_log.Object("keys", keys))
+
+	err := c.mGet(ctx, aPtrMap, opts...)
+	if err != nil {
+		span.SetTag("error", true)
+		span.LogFields(open_log.Error(err))
+	}
+	return err
+}
+func (c *Cache) mGet(ctx context.Context, aPtrMap map[string]interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
@@ -103,6 +144,24 @@ func (c *Cache) MGet(ctx context.Context, aPtrMap map[string]interface{}, opts .
 }
 
 func (c *Cache) MGetSlice(ctx context.Context, keys []string, slicePtr interface{}, opts ...core.Option) error {
+	if c.disableOpenTrace {
+		return c.mGetSlice(ctx, keys, slicePtr, opts...)
+	}
+
+	span := utils.Trace.GetChildSpan(ctx, "cache.MGetSlice")
+	defer span.Finish()
+	ctx = utils.Trace.SaveSpan(ctx, span)
+
+	span.LogFields(open_log.Object("keys", keys))
+
+	err := c.mGetSlice(ctx, keys, slicePtr, opts...)
+	if err != nil {
+		span.SetTag("error", true)
+		span.LogFields(open_log.Error(err))
+	}
+	return err
+}
+func (c *Cache) mGetSlice(ctx context.Context, keys []string, slicePtr interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 

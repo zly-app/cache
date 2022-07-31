@@ -69,6 +69,7 @@ components:
       SingleFlight: single # 默认单跑模块, 可选 no, single
       ExpireSec: 0 # 默认有效时间, 秒, <= 0 表示永久
       IgnoreCacheFault: false # 是否忽略缓存数据库故障, 如果设为true, 在缓存数据库故障时从加载器获取数据, 这会导致缓存击穿. 如果设为false, 在缓存数据库故障时直接返回错误
+      DisableOpenTrace: false # 关闭开放链路追踪
       CacheDB:
         Type: memory # 缓存数据库类型, 支持 no, memory, redis
         Memory: # memory 内存配置

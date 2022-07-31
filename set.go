@@ -4,11 +4,33 @@ import (
 	"context"
 	"fmt"
 
+	open_log "github.com/opentracing/opentracing-go/log"
+	"github.com/zly-app/zapp/pkg/utils"
+
 	"github.com/zly-app/cache/core"
 	"github.com/zly-app/cache/errs"
 )
 
 func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...core.Option) error {
+	if c.disableOpenTrace {
+		return c.set(ctx, key, data, opts...)
+	}
+
+	span := utils.Trace.GetChildSpan(ctx, "cache.Set")
+	defer span.Finish()
+	ctx = utils.Trace.SaveSpan(ctx, span)
+
+	span.LogFields(open_log.String("key", key))
+
+	err := c.set(ctx, key, data, opts...)
+	if err != nil {
+		span.SetTag("error", true)
+		span.LogFields(open_log.Error(err))
+	}
+	return err
+}
+
+func (c *Cache) set(ctx context.Context, key string, data interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
@@ -25,6 +47,28 @@ func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...c
 }
 
 func (c *Cache) MSet(ctx context.Context, dataMap map[string]interface{}, opts ...core.Option) error {
+	if c.disableOpenTrace {
+		return c.mSet(ctx, dataMap, opts...)
+	}
+
+	span := utils.Trace.GetChildSpan(ctx, "cache.MSet")
+	defer span.Finish()
+	ctx = utils.Trace.SaveSpan(ctx, span)
+
+	keys := make([]string, 0, len(dataMap))
+	for k := range dataMap {
+		keys = append(keys, k)
+	}
+	span.LogFields(open_log.Object("keys", keys))
+
+	err := c.mSet(ctx, dataMap, opts...)
+	if err != nil {
+		span.SetTag("error", true)
+		span.LogFields(open_log.Error(err))
+	}
+	return err
+}
+func (c *Cache) mSet(ctx context.Context, dataMap map[string]interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 

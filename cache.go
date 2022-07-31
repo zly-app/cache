@@ -23,6 +23,7 @@ type Cache struct {
 	sf               core.ISingleFlight // 单跑模块
 	expireSec        int                // 默认过期时间
 	ignoreCacheFault bool               // 是否忽略缓存数据库故障
+	disableOpenTrace bool               // 是否关闭链路追踪
 }
 
 func (c *Cache) Close() error {
@@ -125,24 +126,25 @@ func NewCache(conf *Config) (ICache, error) {
 	cache := &Cache{
 		expireSec:        conf.ExpireSec,
 		ignoreCacheFault: conf.IgnoreCacheFault,
+		disableOpenTrace: conf.DisableOpenTrace,
 	}
 
 	switch v := strings.ToLower(conf.CacheDB.Type); v {
 	case "memory":
 		cache.cacheDB = memory_cache.NewMemoryCache(conf.CacheDB.Memory.SizeMB)
 	case "redis":
-		redisClient, err := redis.MakeRedisClient(&redis.RedisConfig{
-			Address:         conf.CacheDB.Redis.Address,
-			UserName:        conf.CacheDB.Redis.UserName,
-			Password:        conf.CacheDB.Redis.Password,
-			DB:              conf.CacheDB.Redis.DB,
-			IsCluster:       conf.CacheDB.Redis.IsCluster,
-			MinIdleConns:    conf.CacheDB.Redis.MinIdleConns,
-			PoolSize:        conf.CacheDB.Redis.PoolSize,
-			ReadTimeout:     conf.CacheDB.Redis.ReadTimeoutSec * 1000,
-			WriteTimeout:    conf.CacheDB.Redis.WriteTimeoutSec * 1000,
-			DialTimeout:     conf.CacheDB.Redis.DialTimeoutSec * 1000,
-			EnableOpenTrace: false,
+		redisClient, err := redis.NewClient(&redis.RedisConfig{
+			Address:          conf.CacheDB.Redis.Address,
+			UserName:         conf.CacheDB.Redis.UserName,
+			Password:         conf.CacheDB.Redis.Password,
+			DB:               conf.CacheDB.Redis.DB,
+			IsCluster:        conf.CacheDB.Redis.IsCluster,
+			MinIdleConns:     conf.CacheDB.Redis.MinIdleConns,
+			PoolSize:         conf.CacheDB.Redis.PoolSize,
+			ReadTimeoutSec:   conf.CacheDB.Redis.ReadTimeoutSec,
+			WriteTimeoutSec:  conf.CacheDB.Redis.WriteTimeoutSec,
+			DialTimeoutSec:   conf.CacheDB.Redis.DialTimeoutSec,
+			DisableOpenTrace: conf.DisableOpenTrace,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("创建redis客户端失败: %v", err)
