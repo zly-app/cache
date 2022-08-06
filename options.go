@@ -15,10 +15,12 @@ var optionsPool = sync.Pool{New: func() interface{} { return &options{} }}
 type LoadFn func(ctx context.Context, key string) (interface{}, error)
 
 type options struct {
-	Serializer serializer.ISerializer
-	Compactor  compactor.ICompactor
-	ExpireSec  int
-	LoadFn     LoadFn
+	Serializer     serializer.ISerializer
+	Compactor      compactor.ICompactor
+	ExpireSec      int
+	LoadFn         LoadFn
+	ForceLoad      bool // 忽略缓存从加载函数加载数据
+	DontWriteCache bool // 不要刷新到缓存
 }
 
 func getOptions() *options {
@@ -29,6 +31,8 @@ func putOptions(opt *options) {
 	opt.Compactor = nil
 	opt.ExpireSec = 0
 	opt.LoadFn = nil
+	opt.ForceLoad = false
+	opt.DontWriteCache = false
 	optionsPool.Put(opt)
 }
 
@@ -74,5 +78,14 @@ func WithExpire(expireSec int) core.Option {
 func WithLoadFn(fn LoadFn) core.Option {
 	return func(opts interface{}) {
 		opts.(*options).LoadFn = fn
+	}
+}
+
+// 忽略缓存从加载函数加载数据
+func WithForceLoad(dontWriteCache bool) core.Option {
+	return func(opts interface{}) {
+		opt := opts.(*options)
+		opt.ForceLoad = true
+		opt.DontWriteCache = dontWriteCache
 	}
 }

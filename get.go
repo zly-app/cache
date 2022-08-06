@@ -35,7 +35,12 @@ func (c *Cache) get(ctx context.Context, key string, aPtr interface{}, opts ...c
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
-	bs, cacheErr := c.cacheDB.Get(ctx, key)
+	var bs []byte
+	cacheErr := ErrCacheMiss
+	if !opt.ForceLoad {
+		bs, cacheErr = c.cacheDB.Get(ctx, key)
+	}
+
 	if cacheErr == nil {
 		return c.unmarshalQuery(bs, aPtr, opt.Serializer, opt.Compactor)
 	}
@@ -48,8 +53,7 @@ func (c *Cache) get(ctx context.Context, key string, aPtr interface{}, opts ...c
 			return cacheErr
 		}
 	}
-
-	if opt.LoadFn == nil { // 加载器不存在, 直接报告错误
+	if opt.LoadFn == nil {
 		return cacheErr
 	}
 
@@ -97,7 +101,10 @@ func (c *Cache) mGet(ctx context.Context, aPtrMap map[string]interface{}, opts .
 	}
 
 	// 从缓存获取结果
-	cacheResults := c.cacheDB.MGet(ctx, keys...)
+	var cacheResults map[string]core.CacheResult
+	if !opt.ForceLoad {
+		cacheResults = c.cacheDB.MGet(ctx, keys...)
+	}
 
 	// 整理已得到的结果
 	result := make(map[string]error, len(aPtrMap))  // 结果数据
@@ -166,7 +173,10 @@ func (c *Cache) mGetSlice(ctx context.Context, keys []string, slicePtr interface
 	defer putOptions(opt)
 
 	// 从缓存获取结果
-	cacheResults := c.cacheDB.MGet(ctx, keys...)
+	var cacheResults map[string]core.CacheResult
+	if !opt.ForceLoad {
+		cacheResults = c.cacheDB.MGet(ctx, keys...)
+	}
 
 	// 整理已得到的结果
 	result := make(map[string]error, len(keys))  // 结果数据
@@ -227,6 +237,9 @@ func (c *Cache) load(opt *options) core.LoadInvoke {
 			}
 
 			// 写入缓存
+			if opt.DontWriteCache {
+				return nil
+			}
 			cacheErr := c.cacheDB.Set(ctx, key, bs, opt.ExpireSec)
 			if cacheErr != nil {
 				if !c.ignoreCacheFault {

@@ -54,6 +54,7 @@ func TestMemoryCache(t *testing.T) {
 	t.Run("testMGet", func(t *testing.T) { testMGet(t, makeMemoryCache()) })
 	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeMemoryCache()) })
 	t.Run("testClose", func(t *testing.T) { testClose(t, makeMemoryCache()) })
+	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeMemoryCache()) })
 }
 
 func TestRedisCache(t *testing.T) {
@@ -275,6 +276,31 @@ func testClose(t *testing.T, cache ICache) {
 	var b []byte
 	err = cache.Get(context.Background(), key, &b)
 	require.NotNil(t, err)
+}
+func testForceLoad(t *testing.T, cache ICache) {
+	const key = "testForceLoad"
+
+	var a = 3
+	var a2 = 4
+	err := cache.Set(context.Background(), key, a)
+	require.Nil(t, err)
+
+	var b int
+	var load bool
+	err = cache.Get(context.Background(), key, &b,
+		WithForceLoad(true),
+		WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
+			load = true
+			return a2, nil
+		}))
+	require.Nil(t, err)
+	require.Equal(t, true, load)
+	require.Equal(t, a2, b)
+
+	var c int
+	err = cache.Get(context.Background(), key, &c)
+	require.Nil(t, err)
+	require.Equal(t, a, c)
 }
 func BenchmarkGet(b *testing.B) {
 	keyCount := []struct {
