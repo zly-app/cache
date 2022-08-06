@@ -21,7 +21,7 @@ type ICache interface {
 	// 批量设置数据
 	MSet(ctx context.Context, dataMap map[string]interface{}, opts ...Option) error
 
-	// 单跑执行
+	// 单跑执行, 默认不会自动写入缓存, 必须设置 LoadFn
 	SingleFlightDo(ctx context.Context, key string, opts ...Option) error
 
 	// 删除
