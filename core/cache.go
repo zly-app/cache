@@ -6,6 +6,8 @@ import (
 
 type Option func(opts interface{})
 
+type LoadFn func(ctx context.Context, key string) (interface{}, error)
+
 type ICache interface {
 	// 获取数据并放入 aPtr 中
 	Get(ctx context.Context, key string, aPtr interface{}, opts ...Option) error
@@ -20,7 +22,7 @@ type ICache interface {
 	MSet(ctx context.Context, dataMap map[string]interface{}, opts ...Option) error
 
 	// 单跑执行
-	SingleFlightDo(ctx context.Context, key string, invoke LoadInvoke) ([]byte, error)
+	SingleFlightDo(ctx context.Context, key string, opts ...Option) error
 
 	// 删除
 	Del(ctx context.Context, keys ...string) error

@@ -3,6 +3,8 @@
 
 # 示例
 
+从缓存加载, 如果加载失败自动从db加载并自动写入缓存, db加载时自动使用SingleFlight
+
 ```go
 func main() {
 	c, _ := cache.NewCache(cache.NewConfig())
@@ -18,7 +20,36 @@ func main() {
 }
 ```
 
+# 古老的用法
+
+从缓存获取失败时手动从db加载, 然后手动写入缓存, db加载时需手动设置SingleFlight
+
+```go
+func main() {
+	c, _ := cache.NewCache(cache.NewConfig())
+
+	var a string
+	const key = "key"
+	err := c.Get(context.Background(), key, &a) // 获取数据
+	if err != nil {
+		// 加载失败从db加载
+		err = c.SingleFlightDo(context.Background(), key,
+			cache.WithLoadFn(func(ctx context.Context, key string) (interface{}, error) { // db加载函数
+				a = "hello"
+				return a, nil
+			}))
+		if err != nil {
+			panic(err)
+		}
+		_ = c.Set(context.Background(), key, a) // 写入缓存
+	}
+	print(a) // hello
+}
+```
+
 # 二级缓存
+
+首先从一级缓存加载, 如果加载失败从二级缓存加载并自动写入以及缓存, 如果仍然失败从db加载并自动写入二级缓存, db加载时自动使用SingleFlight
 
 ```go
 func main() {
@@ -55,6 +86,9 @@ func main() {
 	creator := cache.NewCacheCreator(app) // 创建cache建造者
 
 	cache := creator.GetCache("default") // 通过cache建造者获取cache
+
+    var a string
+    _ = cache1.Get(context.Background(), "key", &a)
 }
 ```
 

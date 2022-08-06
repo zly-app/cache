@@ -41,4 +41,5 @@ var (
 
 type (
 	ICache = core.ICache
+	LoadFn = core.LoadFn
 )

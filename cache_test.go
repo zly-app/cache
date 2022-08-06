@@ -55,6 +55,7 @@ func TestMemoryCache(t *testing.T) {
 	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeMemoryCache()) })
 	t.Run("testClose", func(t *testing.T) { testClose(t, makeMemoryCache()) })
 	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeMemoryCache()) })
+	t.Run("testSF", func(t *testing.T) { testSF(t, makeMemoryCache()) })
 }
 
 func TestRedisCache(t *testing.T) {
@@ -67,7 +68,8 @@ func TestRedisCache(t *testing.T) {
 	t.Run("testMGet", func(t *testing.T) { testMGet(t, makeRedisCache()) })
 	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeRedisCache()) })
 	t.Run("testClose", func(t *testing.T) { testClose(t, makeRedisCache()) })
-	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeMemoryCache()) })
+	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeRedisCache()) })
+	t.Run("testSF", func(t *testing.T) { testSF(t, makeRedisCache()) })
 }
 
 func testSetGet(t *testing.T, cache ICache) {
@@ -303,6 +305,34 @@ func testForceLoad(t *testing.T, cache ICache) {
 	require.Nil(t, err)
 	require.Equal(t, a, c)
 }
+func testSF(t *testing.T, cache ICache) {
+	const key = "testLoadFn"
+
+	var a = 3
+	var loadB, loadC bool
+
+	go func() {
+		err := cache.SingleFlightDo(context.Background(), key, WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
+			time.Sleep(time.Millisecond * 200)
+			loadB = true
+			return a, nil
+		}))
+		require.Nil(t, err)
+	}()
+
+	time.Sleep(time.Millisecond * 100) // 等待b处于加载状态
+	var b int
+	err := cache.Get(context.Background(), key, &b, WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
+		loadC = true
+		return a, nil
+	}))
+	require.Nil(t, err)
+	require.Equal(t, a, b)
+
+	require.Equal(t, true, loadB)
+	require.Equal(t, false, loadC)
+}
+
 func BenchmarkGet(b *testing.B) {
 	keyCount := []struct {
 		name   string

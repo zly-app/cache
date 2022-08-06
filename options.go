@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"context"
 	"sync"
 
 	"github.com/zly-app/zapp/pkg/compactor"
@@ -11,8 +10,6 @@ import (
 )
 
 var optionsPool = sync.Pool{New: func() interface{} { return &options{} }}
-
-type LoadFn func(ctx context.Context, key string) (interface{}, error)
 
 type options struct {
 	Serializer     serializer.ISerializer
