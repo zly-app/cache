@@ -19,6 +19,9 @@ type ICache interface {
 	// 批量设置数据
 	MSet(ctx context.Context, dataMap map[string]interface{}, opts ...Option) error
 
+	// 单跑执行
+	SingleFlightDo(ctx context.Context, key string, invoke LoadInvoke) ([]byte, error)
+
 	// 删除
 	Del(ctx context.Context, keys ...string) error
 	// 关闭

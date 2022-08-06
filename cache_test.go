@@ -67,6 +67,7 @@ func TestRedisCache(t *testing.T) {
 	t.Run("testMGet", func(t *testing.T) { testMGet(t, makeRedisCache()) })
 	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeRedisCache()) })
 	t.Run("testClose", func(t *testing.T) { testClose(t, makeRedisCache()) })
+	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeMemoryCache()) })
 }
 
 func testSetGet(t *testing.T, cache ICache) {
