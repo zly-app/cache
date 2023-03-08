@@ -96,7 +96,12 @@ components:
       ExpireSec: 0 # 默认有效时间, 秒, <= 0 表示永久
       IgnoreCacheFault: false # 是否忽略缓存数据库故障, 如果设为true, 在缓存数据库故障时从加载器获取数据, 这会导致缓存击穿. 如果设为false, 在缓存数据库故障时直接返回错误
       CacheDB:
-        Type: freecache # 缓存数据库类型, 支持 no, freecache, redis
+        Type: freecache # 缓存数据库类型, 支持 no, bigcache, freecache, redis
+        BigCache:
+          Shards: 1024 # 分片数, 必须是2的幂
+          CleanTimeMs: 1 # 清理周期秒数, 为 0 时不自动清理
+          MaxEntriesInWindow: 600000 # 初始化时申请允许储存的条目数的内存, 当实际使用量超过当前最大量时会触发内存重分配
+          MaxEntrySize: 500 # 初始化时申请的每个条目的占用内存, 单位字节, 当实际使用量超过当前最大量时会触发内存重分配
         FreeCache: # memory 内存配置
           SizeMB: 1 # 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
         Redis: # redis 内存配置
@@ -122,6 +127,7 @@ components:
 # 支持的缓存数据库
 
 + [no](./cachedb/no_cache/cache.go)
++ [bigcache](./cachedb/bigcache/cache.go)
 + [freecache](./cachedb/freecache/cache.go)
 + [redis](./cachedb/redis_cache/cache.go)
 

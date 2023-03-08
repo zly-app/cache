@@ -41,7 +41,7 @@ func (m *freeCache) Close() error {
 }
 
 // memoryMB 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
-func NewMemoryCache(memoryMB int) core.ICacheDB {
+func NewCache(memoryMB int) core.ICacheDB {
 	if memoryMB < minMemoryMB {
 		memoryMB = minMemoryMB
 	}

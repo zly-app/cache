@@ -3,6 +3,7 @@ module github.com/zly-app/cache
 go 1.18
 
 require (
+	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/coocood/freecache v1.2.1
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/stretchr/testify v1.8.1

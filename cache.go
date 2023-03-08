@@ -8,6 +8,7 @@ import (
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
+	"github.com/zly-app/cache/cachedb/bigcache"
 	"github.com/zly-app/cache/cachedb/freecache"
 	"github.com/zly-app/cache/cachedb/redis_cache"
 	"github.com/zly-app/cache/core"
@@ -73,8 +74,19 @@ func NewCache(conf *Config) (ICache, error) {
 	}
 
 	switch v := strings.ToLower(conf.CacheDB.Type); v {
+	case "bigcache":
+		cache.cacheDB, err = bigcache.NewCache(
+			conf.CacheDB.BigCache.Shards,
+			conf.ExpireSec,
+			conf.CacheDB.BigCache.CleanTimeMs,
+			conf.CacheDB.BigCache.MaxEntriesInWindow,
+			conf.CacheDB.BigCache.MaxEntrySize,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("创建bigcache失败: %v", err)
+		}
 	case "freecache":
-		cache.cacheDB = freecache.NewMemoryCache(conf.CacheDB.FreeCache.SizeMB)
+		cache.cacheDB = freecache.NewCache(conf.CacheDB.FreeCache.SizeMB)
 	case "redis":
 		redisClient, err := redis.NewClient(&redis.RedisConfig{
 			Address:         conf.CacheDB.Redis.Address,

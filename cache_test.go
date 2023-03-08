@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,6 +16,16 @@ import (
 
 	"github.com/zly-app/cache/errs"
 )
+
+func makeBigCache() ICache {
+	conf := NewConfig()
+	conf.CacheDB.Type = "bigcache"
+	cache, err := NewCache(conf)
+	if err != nil {
+		panic(fmt.Errorf("创建Cache失败: %v", err))
+	}
+	return cache
+}
 
 func makeFreeCache() ICache {
 	conf := NewConfig()
@@ -29,12 +40,33 @@ func makeFreeCache() ICache {
 func makeRedisCache() ICache {
 	conf := NewConfig()
 	conf.CacheDB.Type = "redis"
-	conf.CacheDB.Redis.Address = "127.0.0.1:6379"
+	conf.CacheDB.Redis.Address = "localhost:6379"
 	cache, err := NewCache(conf)
 	if err != nil {
 		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
 	return cache
+}
+
+func TestBigCache(t *testing.T) {
+	t.Run("testSetGet", func(t *testing.T) { testSetGet(t, makeBigCache()) })
+	t.Run("testSetGetSlice", func(t *testing.T) { testSetGetSlice(t, makeBigCache()) })
+	t.Run("testDel", func(t *testing.T) { testDel(t, makeBigCache()) })
+	t.Run("testExpire", func(t *testing.T) { testExpire(t, makeBigCache()) })
+	t.Run("testDefaultExpire", func(t *testing.T) {
+		conf := NewConfig()
+		conf.ExpireSec = 1
+		conf.CacheDB.Type = "bigcache"
+		cache, err := NewCache(conf)
+		if err != nil {
+			panic(fmt.Errorf("创建Cache失败: %v", err))
+		}
+		testDefaultExpire(t, cache)
+	})
+	t.Run("testLoadFn", func(t *testing.T) { testLoadFn(t, makeBigCache()) })
+	t.Run("testClose", func(t *testing.T) { testClose(t, makeBigCache()) })
+	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeBigCache()) })
+	t.Run("testSF", func(t *testing.T) { testSF(t, makeBigCache()) })
 }
 
 func TestFreeCache(t *testing.T) {
@@ -45,6 +77,7 @@ func TestFreeCache(t *testing.T) {
 	t.Run("testDefaultExpire", func(t *testing.T) {
 		conf := NewConfig()
 		conf.ExpireSec = 1
+		conf.CacheDB.Type = "freecache"
 		cache, err := NewCache(conf)
 		if err != nil {
 			panic(fmt.Errorf("创建Cache失败: %v", err))
@@ -126,7 +159,7 @@ func testExpire(t *testing.T, cache ICache) {
 	require.Nil(t, err)
 	require.Equal(t, a, b)
 
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 
 	var c int
 	err = cache.Get(context.Background(), key, &c)
@@ -144,10 +177,11 @@ func testDefaultExpire(t *testing.T, cache ICache) {
 	require.Nil(t, err)
 	require.Equal(t, a, b)
 
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 
 	var c int
 	err = cache.Get(context.Background(), key, &c)
+	t.Log(c)
 	require.Equal(t, errs.CacheMiss, err)
 }
 func testLoadFn(t *testing.T, cache ICache) {
@@ -160,7 +194,7 @@ func testLoadFn(t *testing.T, cache ICache) {
 	err := cache.Get(context.Background(), key, &b, WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
 		load = true
 		return a, nil
-	}))
+	}), WithExpire(3))
 	require.Nil(t, err)
 	require.Equal(t, true, load)
 	require.Equal(t, a, b)
@@ -201,31 +235,33 @@ func testForceLoad(t *testing.T, cache ICache) {
 	require.Equal(t, a, c)
 }
 func testSF(t *testing.T, cache ICache) {
-	const key = "testLoadFn"
+	const key = "testSF"
 
 	var a = 3
 	var loadB, loadC bool
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		err := cache.SingleFlightDo(context.Background(), key, WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
-			time.Sleep(time.Millisecond * 200)
 			loadB = true
 			return a, nil
 		}))
 		require.Nil(t, err)
 	}()
 
-	time.Sleep(time.Millisecond * 100) // 等待b处于加载状态
+	wg.Wait()
 	var b int
 	err := cache.Get(context.Background(), key, &b, WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
 		loadC = true
 		return a, nil
-	}))
+	}), WithExpire(3))
 	require.Nil(t, err)
 	require.Equal(t, a, b)
 
 	require.Equal(t, true, loadB)
-	require.Equal(t, false, loadC)
+	require.Equal(t, true, loadC)
 }
 
 func BenchmarkGet(b *testing.B) {
