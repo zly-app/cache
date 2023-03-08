@@ -7,7 +7,7 @@ import (
 	open_log "github.com/opentracing/opentracing-go/log"
 	"github.com/zly-app/zapp/pkg/utils"
 
-	"github.com/zly-app/cache/v2/core"
+	"github.com/zly-app/cache/core"
 )
 
 func (c *Cache) SingleFlightDo(ctx context.Context, key string, opts ...core.Option) error {

@@ -3,8 +3,8 @@ package no_cache
 import (
 	"context"
 
-	"github.com/zly-app/cache/v2/core"
-	"github.com/zly-app/cache/v2/errs"
+	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/errs"
 )
 
 var _ core.ICacheDB = (*noCache)(nil)

@@ -6,7 +6,7 @@ import (
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
-	"github.com/zly-app/cache/v2/core"
+	"github.com/zly-app/cache/core"
 )
 
 var optionsPool = sync.Pool{New: func() interface{} { return &options{} }}

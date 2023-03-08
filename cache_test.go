@@ -13,11 +13,13 @@ import (
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
-	"github.com/zly-app/cache/v2/errs"
+	"github.com/zly-app/cache/errs"
 )
 
-func makeMemoryCache() ICache {
-	cache, err := NewCache(NewConfig())
+func makeFreeCache() ICache {
+	conf := NewConfig()
+	conf.CacheDB.Type = "freecache"
+	cache, err := NewCache(conf)
 	if err != nil {
 		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
@@ -36,10 +38,10 @@ func makeRedisCache() ICache {
 }
 
 func TestFreeCache(t *testing.T) {
-	t.Run("testSetGet", func(t *testing.T) { testSetGet(t, makeMemoryCache()) })
-	t.Run("testSetGetSlice", func(t *testing.T) { testSetGetSlice(t, makeMemoryCache()) })
-	t.Run("testDel", func(t *testing.T) { testDel(t, makeMemoryCache()) })
-	t.Run("testExpire", func(t *testing.T) { testExpire(t, makeMemoryCache()) })
+	t.Run("testSetGet", func(t *testing.T) { testSetGet(t, makeFreeCache()) })
+	t.Run("testSetGetSlice", func(t *testing.T) { testSetGetSlice(t, makeFreeCache()) })
+	t.Run("testDel", func(t *testing.T) { testDel(t, makeFreeCache()) })
+	t.Run("testExpire", func(t *testing.T) { testExpire(t, makeFreeCache()) })
 	t.Run("testDefaultExpire", func(t *testing.T) {
 		conf := NewConfig()
 		conf.ExpireSec = 1
@@ -49,10 +51,10 @@ func TestFreeCache(t *testing.T) {
 		}
 		testDefaultExpire(t, cache)
 	})
-	t.Run("testLoadFn", func(t *testing.T) { testLoadFn(t, makeMemoryCache()) })
-	t.Run("testClose", func(t *testing.T) { testClose(t, makeMemoryCache()) })
-	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeMemoryCache()) })
-	t.Run("testSF", func(t *testing.T) { testSF(t, makeMemoryCache()) })
+	t.Run("testLoadFn", func(t *testing.T) { testLoadFn(t, makeFreeCache()) })
+	t.Run("testClose", func(t *testing.T) { testClose(t, makeFreeCache()) })
+	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeFreeCache()) })
+	t.Run("testSF", func(t *testing.T) { testSF(t, makeFreeCache()) })
 }
 
 func TestRedisCache(t *testing.T) {

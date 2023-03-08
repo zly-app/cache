@@ -4,9 +4,9 @@ import (
 	"github.com/zly-app/zapp/logger"
 	"go.uber.org/zap"
 
-	"github.com/zly-app/cache/v2/core"
-	no_sf "github.com/zly-app/cache/v2/single_flight/no-sf"
-	single_sf "github.com/zly-app/cache/v2/single_flight/single-sf"
+	"github.com/zly-app/cache/core"
+	no_sf "github.com/zly-app/cache/single_flight/no-sf"
+	single_sf "github.com/zly-app/cache/single_flight/single-sf"
 )
 
 type SingleFlightCreator = func() core.ISingleFlight

@@ -1,12 +1,6 @@
 
 # 透明读缓存工具
 
-# get
-
-```
-go get github.com/zly-app/cache/v2
-```
-
 # 示例
 
 从缓存加载, 如果加载失败自动从db加载并自动写入缓存, db加载时自动使用SingleFlight
@@ -39,7 +33,7 @@ package main
 import (
 	"context"
 
-	"github.com/zly-app/cache/v2"
+	"github.com/zly-app/cache"
 )
 
 func main() {

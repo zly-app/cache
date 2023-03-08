@@ -8,10 +8,10 @@ import (
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
-	"github.com/zly-app/cache/v2/cachedb/freecache"
-	"github.com/zly-app/cache/v2/cachedb/redis_cache"
-	"github.com/zly-app/cache/v2/core"
-	"github.com/zly-app/cache/v2/single_flight"
+	"github.com/zly-app/cache/cachedb/freecache"
+	"github.com/zly-app/cache/cachedb/redis_cache"
+	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/single_flight"
 )
 
 type Cache struct {

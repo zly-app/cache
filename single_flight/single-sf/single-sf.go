@@ -6,7 +6,7 @@ import (
 	"hash/fnv"
 	"sync"
 
-	"github.com/zly-app/cache/v2/core"
+	"github.com/zly-app/cache/core"
 )
 
 const (

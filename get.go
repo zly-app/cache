@@ -9,7 +9,7 @@ import (
 	"github.com/zly-app/zapp/pkg/utils"
 	"go.uber.org/zap"
 
-	"github.com/zly-app/cache/v2/core"
+	"github.com/zly-app/cache/core"
 )
 
 func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {

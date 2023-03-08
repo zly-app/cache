@@ -4,8 +4,8 @@ import (
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
-	"github.com/zly-app/cache/v2/core"
-	"github.com/zly-app/cache/v2/errs"
+	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/errs"
 )
 
 var (
