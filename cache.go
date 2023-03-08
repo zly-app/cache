@@ -1,19 +1,17 @@
 package cache
 
 import (
-	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/zly-app/component/redis"
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
-	"github.com/zly-app/cache/cachedb/memory_cache"
-	"github.com/zly-app/cache/cachedb/redis_cache"
-	"github.com/zly-app/cache/core"
-	"github.com/zly-app/cache/single_flight"
+	"github.com/zly-app/cache/v2/cachedb/freecache"
+	"github.com/zly-app/cache/v2/cachedb/redis_cache"
+	"github.com/zly-app/cache/v2/core"
+	"github.com/zly-app/cache/v2/single_flight"
 )
 
 type Cache struct {
@@ -23,7 +21,6 @@ type Cache struct {
 	sf               core.ISingleFlight // 单跑模块
 	expireSec        int                // 默认过期时间
 	ignoreCacheFault bool               // 是否忽略缓存数据库故障
-	disableOpenTrace bool               // 是否关闭链路追踪
 }
 
 func (c *Cache) Close() error {
@@ -64,59 +61,6 @@ func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer seri
 	return nil
 }
 
-func (c *Cache) unmarshalMQuerySlice(keys []string, cacheResults map[string]core.CacheResult, slicePtr interface{},
-	serializer serializer.ISerializer, compactor compactor.ICompactor) map[string]error {
-	// 类型检查
-	sliceType := reflect.TypeOf(slicePtr)
-	if sliceType.Kind() != reflect.Ptr {
-		panic(errors.New("slicePtr必须是带指针的切片"))
-	}
-	sliceType = sliceType.Elem()
-	if sliceType.Kind() != reflect.Slice {
-		panic(errors.New("slicePtr必须是带指针的切片"))
-	}
-
-	// 值检查
-	sliceValue := reflect.ValueOf(slicePtr).Elem()
-	if sliceValue.Len() != 0 {
-		panic(errors.New("slicePtr的长度必须为0"))
-	}
-	if sliceValue.Kind() == reflect.Invalid {
-		panic(errors.New("slicePtr中子类型无法访问"))
-	}
-
-	// 获取子类型
-	itemType := sliceType.Elem()                // 获取子类型
-	itemIsPtr := itemType.Kind() == reflect.Ptr // 检查子类型是否为指针
-	if itemIsPtr {
-		itemType = itemType.Elem() // 获取指针指向的真正的子类型
-	}
-
-	// 数据处理
-	result := make(map[string]error, len(cacheResults))
-	items := make([]reflect.Value, 0, len(cacheResults))
-	for _, key := range keys {
-		cacheResult, ok := cacheResults[key]
-		if !ok || cacheResult.Err != nil { // 只处理正常的数据
-			continue
-		}
-
-		child := reflect.New(itemType) // 创建一个相同类型的指针
-		err := c.unmarshalQuery(cacheResult.Data, child.Interface(), serializer, compactor)
-		if err == nil {
-			if !itemIsPtr {
-				child = child.Elem() // 如果想要的不是指针那么获取它的内容
-			}
-			items = append(items, child)
-		}
-		result[key] = err
-	}
-
-	values := reflect.Append(sliceValue, items...) // 构建内容切片
-	sliceValue.Set(values)                         // 将内容切片写入原始切片中
-	return result
-}
-
 func NewCache(conf *Config) (ICache, error) {
 	err := conf.Check()
 	if err != nil {
@@ -126,25 +70,23 @@ func NewCache(conf *Config) (ICache, error) {
 	cache := &Cache{
 		expireSec:        conf.ExpireSec,
 		ignoreCacheFault: conf.IgnoreCacheFault,
-		disableOpenTrace: conf.DisableOpenTrace,
 	}
 
 	switch v := strings.ToLower(conf.CacheDB.Type); v {
-	case "memory":
-		cache.cacheDB = memory_cache.NewMemoryCache(conf.CacheDB.Memory.SizeMB)
+	case "freecache":
+		cache.cacheDB = freecache.NewMemoryCache(conf.CacheDB.FreeCache.SizeMB)
 	case "redis":
 		redisClient, err := redis.NewClient(&redis.RedisConfig{
-			Address:          conf.CacheDB.Redis.Address,
-			UserName:         conf.CacheDB.Redis.UserName,
-			Password:         conf.CacheDB.Redis.Password,
-			DB:               conf.CacheDB.Redis.DB,
-			IsCluster:        conf.CacheDB.Redis.IsCluster,
-			MinIdleConns:     conf.CacheDB.Redis.MinIdleConns,
-			PoolSize:         conf.CacheDB.Redis.PoolSize,
-			ReadTimeoutSec:   conf.CacheDB.Redis.ReadTimeoutSec,
-			WriteTimeoutSec:  conf.CacheDB.Redis.WriteTimeoutSec,
-			DialTimeoutSec:   conf.CacheDB.Redis.DialTimeoutSec,
-			DisableOpenTrace: conf.DisableOpenTrace,
+			Address:         conf.CacheDB.Redis.Address,
+			UserName:        conf.CacheDB.Redis.UserName,
+			Password:        conf.CacheDB.Redis.Password,
+			DB:              conf.CacheDB.Redis.DB,
+			IsCluster:       conf.CacheDB.Redis.IsCluster,
+			MinIdleConns:    conf.CacheDB.Redis.MinIdleConns,
+			PoolSize:        conf.CacheDB.Redis.PoolSize,
+			ReadTimeoutSec:  conf.CacheDB.Redis.ReadTimeoutSec,
+			WriteTimeoutSec: conf.CacheDB.Redis.WriteTimeoutSec,
+			DialTimeoutSec:  conf.CacheDB.Redis.DialTimeoutSec,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("创建redis客户端失败: %v", err)

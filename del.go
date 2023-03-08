@@ -8,10 +8,6 @@ import (
 )
 
 func (c *Cache) Del(ctx context.Context, keys ...string) error {
-	if c.disableOpenTrace {
-		return c.del(ctx, keys...)
-	}
-
 	span := utils.Trace.GetChildSpan(ctx, "cache.Del")
 	defer span.Finish()
 	ctx = utils.Trace.SaveSpan(ctx, span)

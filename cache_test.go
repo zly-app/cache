@@ -13,7 +13,7 @@ import (
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
-	"github.com/zly-app/cache/errs"
+	"github.com/zly-app/cache/v2/errs"
 )
 
 func makeMemoryCache() ICache {
@@ -35,7 +35,7 @@ func makeRedisCache() ICache {
 	return cache
 }
 
-func TestMemoryCache(t *testing.T) {
+func TestFreeCache(t *testing.T) {
 	t.Run("testSetGet", func(t *testing.T) { testSetGet(t, makeMemoryCache()) })
 	t.Run("testSetGetSlice", func(t *testing.T) { testSetGetSlice(t, makeMemoryCache()) })
 	t.Run("testDel", func(t *testing.T) { testDel(t, makeMemoryCache()) })
@@ -50,9 +50,6 @@ func TestMemoryCache(t *testing.T) {
 		testDefaultExpire(t, cache)
 	})
 	t.Run("testLoadFn", func(t *testing.T) { testLoadFn(t, makeMemoryCache()) })
-	t.Run("testMSet", func(t *testing.T) { testMSet(t, makeMemoryCache()) })
-	t.Run("testMGet", func(t *testing.T) { testMGet(t, makeMemoryCache()) })
-	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeMemoryCache()) })
 	t.Run("testClose", func(t *testing.T) { testClose(t, makeMemoryCache()) })
 	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeMemoryCache()) })
 	t.Run("testSF", func(t *testing.T) { testSF(t, makeMemoryCache()) })
@@ -64,9 +61,6 @@ func TestRedisCache(t *testing.T) {
 	t.Run("testDel", func(t *testing.T) { testDel(t, makeRedisCache()) })
 	t.Run("testExpire", func(t *testing.T) { testExpire(t, makeRedisCache()) })
 	t.Run("testLoadFn", func(t *testing.T) { testLoadFn(t, makeRedisCache()) })
-	t.Run("testMSet", func(t *testing.T) { testMSet(t, makeRedisCache()) })
-	t.Run("testMGet", func(t *testing.T) { testMGet(t, makeRedisCache()) })
-	t.Run("testMGetSlice", func(t *testing.T) { testMGetSlice(t, makeRedisCache()) })
 	t.Run("testClose", func(t *testing.T) { testClose(t, makeRedisCache()) })
 	t.Run("testForceLoad", func(t *testing.T) { testForceLoad(t, makeRedisCache()) })
 	t.Run("testSF", func(t *testing.T) { testSF(t, makeRedisCache()) })
@@ -168,107 +162,6 @@ func testLoadFn(t *testing.T, cache ICache) {
 	require.Nil(t, err)
 	require.Equal(t, true, load)
 	require.Equal(t, a, b)
-}
-func testMSet(t *testing.T, cache ICache) {
-	const key1 = "testMSet1"
-	const key2 = "testMSet2"
-
-	var a = map[string]interface{}{
-		key1: 1,
-		key2: 2,
-	}
-	err := cache.MSet(context.Background(), a)
-	require.Nil(t, err)
-
-	var b int
-	err = cache.Get(context.Background(), key1, &b)
-	require.Nil(t, err)
-	require.Equal(t, a[key1], b)
-
-	var c int
-	err = cache.Get(context.Background(), key2, &c)
-	require.Nil(t, err)
-	require.Equal(t, a[key2], c)
-}
-func testMGet(t *testing.T, cache ICache) {
-	const key1 = "testMGet1"
-	const key2 = "testMGet2"
-	const key3 = "testMGet3"
-
-	var a = 1
-	err := cache.Set(context.Background(), key1, a)
-	require.Nil(t, err)
-
-	var b1, b2, b3 int
-	b := map[string]interface{}{
-		key1: &b1,
-		key2: &b2,
-		key3: &b3,
-	}
-	err = cache.MGet(context.Background(), b)
-	require.NotNil(t, err)
-	require.Equal(t, 1, b1)
-	require.Equal(t, nil, GetKeyError(err, key1))
-	require.Equal(t, 0, b2)
-	require.Equal(t, ErrCacheMiss, GetKeyError(err, key2))
-	require.Equal(t, 0, b3)
-	require.Equal(t, ErrCacheMiss, GetKeyError(err, key3))
-
-	var c1, c2, c3 int
-	var loadC2, loadC3, loadOther bool
-	c := map[string]interface{}{
-		key1: &c1,
-		key2: &c2,
-		key3: &c3,
-	}
-	var loadFn = func(ctx context.Context, key string) (interface{}, error) {
-		switch key {
-		case key2:
-			loadC2 = true
-			return 2, nil
-		case key3:
-			loadC3 = true
-			return nil, nil
-		}
-		loadOther = true
-		return nil, fmt.Errorf("意外的加载key: %v", err)
-	}
-	err = cache.MGet(context.Background(), c, WithLoadFn(loadFn))
-	require.NotNil(t, err)
-	require.Equal(t, false, loadOther)
-	require.Equal(t, true, loadC2)
-	require.Equal(t, true, loadC3)
-	require.Equal(t, 1, c1)
-	require.Equal(t, nil, GetKeyError(err, key1))
-	require.Equal(t, 2, c2)
-	require.Equal(t, nil, GetKeyError(err, key2))
-	require.Equal(t, 0, c3)
-	require.Equal(t, ErrDataIsNil, GetKeyError(err, key3))
-}
-func testMGetSlice(t *testing.T, cache ICache) {
-	const key1 = "testMGetSlice1"
-	const key2 = "testMGetSlice2"
-	const key3 = "testMGetSlice3"
-
-	var a = map[string]interface{}{
-		key1: 1,
-		key2: 2,
-	}
-	err := cache.MSet(context.Background(), a)
-	require.Nil(t, err)
-
-	var b []int
-	err = cache.MGetSlice(context.Background(), []string{key1, key2}, &b)
-	require.Nil(t, err)
-	require.Equal(t, []int{1, 2}, b)
-
-	var c []int
-	err = cache.MGetSlice(context.Background(), []string{key1, key2, key3}, &c)
-	require.NotNil(t, err)
-	require.Equal(t, []int{1, 2}, c)
-	require.Equal(t, nil, GetKeyError(err, key1))
-	require.Equal(t, nil, GetKeyError(err, key2))
-	require.Equal(t, ErrCacheMiss, GetKeyError(err, key3))
 }
 func testClose(t *testing.T, cache ICache) {
 	const key = "testClose"
@@ -378,7 +271,7 @@ func benchGet(b *testing.B, maxKeyCount, sizeMB int, serializer serializer.ISeri
 	const dataLen = 512
 
 	conf := NewConfig()
-	conf.CacheDB.Memory.SizeMB = sizeMB
+	conf.CacheDB.FreeCache.SizeMB = sizeMB
 	cache, err := NewCache(conf)
 	require.Nil(b, err)
 

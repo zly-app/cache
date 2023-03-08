@@ -3,7 +3,7 @@ package no_sf
 import (
 	"context"
 
-	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/v2/core"
 )
 
 type NoSingleFlight struct{}

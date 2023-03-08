@@ -7,14 +7,10 @@ import (
 	open_log "github.com/opentracing/opentracing-go/log"
 	"github.com/zly-app/zapp/pkg/utils"
 
-	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/v2/core"
 )
 
 func (c *Cache) SingleFlightDo(ctx context.Context, key string, opts ...core.Option) error {
-	if c.disableOpenTrace {
-		return c.singleFlightDo(ctx, key, opts...)
-	}
-
 	span := utils.Trace.GetChildSpan(ctx, "cache.SingleFlightDo")
 	defer span.Finish()
 	ctx = utils.Trace.SaveSpan(ctx, span)
