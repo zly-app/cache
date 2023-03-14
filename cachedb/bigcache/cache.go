@@ -15,8 +15,8 @@ type bigCache struct {
 }
 
 func (m *bigCache) Get(ctx context.Context, key string) ([]byte, error) {
-	data, err := m.cache.Get(key)
-	if err == bigcache.ErrEntryNotFound {
+	data, info, err := m.cache.GetWithInfo(key)
+	if err == bigcache.ErrEntryNotFound || info.EntryStatus != 0 {
 		return nil, errs.CacheMiss
 	}
 	return data, err
