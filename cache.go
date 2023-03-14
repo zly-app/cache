@@ -78,7 +78,7 @@ func NewCache(conf *Config) (ICache, error) {
 		cache.cacheDB, err = bigcache.NewCache(
 			conf.CacheDB.BigCache.Shards,
 			conf.ExpireSec,
-			conf.CacheDB.BigCache.CleanTimeMs,
+			conf.CacheDB.BigCache.CleanTimeSec,
 			conf.CacheDB.BigCache.MaxEntriesInWindow,
 			conf.CacheDB.BigCache.MaxEntrySize,
 		)

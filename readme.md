@@ -99,7 +99,7 @@ components:
         Type: freecache # 缓存数据库类型, 支持 no, bigcache, freecache, redis
         BigCache:
           Shards: 1024 # 分片数, 必须是2的幂
-          CleanTimeMs: 1 # 清理周期秒数, 为 0 时不自动清理
+          CleanTimeSec: 60 # 清理周期秒数, 为 0 时不自动清理. 注意, 官方库是会影响到expire的, 而这个不会影响到expire
           MaxEntriesInWindow: 600000 # 初始化时申请允许储存的条目数的内存, 当实际使用量超过当前最大量时会触发内存重分配
           MaxEntrySize: 500 # 初始化时申请的每个条目的占用内存, 单位字节, 当实际使用量超过当前最大量时会触发内存重分配
         FreeCache: # memory 内存配置

@@ -35,8 +35,6 @@ var (
 	ErrCacheMiss = errs.CacheMiss
 	// 数据为nil
 	ErrDataIsNil = errs.DataIsNil
-	// 获取指定key的error
-	GetKeyError = errs.GetKeyError
 )
 
 type (

@@ -15,7 +15,7 @@ const (
 	defCacheDB_Type = "bigcache"
 
 	defCacheDB_BigCache_Shards             = 1024
-	defCacheDB_BigCache_CleanTimeMs        = 1
+	defCacheDB_BigCache_CleanTimeSec       = 60
 	defCacheDB_BigCache_MaxEntriesInWindow = 1000 * 10 * 60
 	defCacheDB_BigCache_MaxEntrySize       = 500
 
@@ -41,7 +41,7 @@ type Config struct {
 		Type     string // 缓存数据库类型, 支持 no, bigcache, freecache, redis
 		BigCache struct {
 			Shards             int // 分片数, 必须是2的幂
-			CleanTimeMs        int // 清理周期秒数, 为 0 时不自动清理
+			CleanTimeSec       int // 清理周期秒数, 为 0 时不自动清理. 注意, 官方库是会影响到expire的, 而这个不会影响到expire
 			MaxEntriesInWindow int // 初始化时申请允许储存的条目数的内存, 当实际使用量超过当前最大量时会触发内存重分配
 			MaxEntrySize       int // 初始化时申请的每个条目的占用内存, 单位字节, 当实际使用量超过当前最大量时会触发内存重分配
 		}
@@ -74,7 +74,7 @@ func NewConfig() *Config {
 
 	conf.CacheDB.Type = defCacheDB_Type
 
-	conf.CacheDB.BigCache.CleanTimeMs = defCacheDB_BigCache_CleanTimeMs
+	conf.CacheDB.BigCache.CleanTimeSec = defCacheDB_BigCache_CleanTimeSec
 
 	conf.CacheDB.FreeCache.SizeMB = defCacheDB_FreeCache_SizeMB
 
@@ -93,7 +93,7 @@ func (conf *Config) Check() error {
 	switch v := strings.ToLower(conf.CacheDB.Type); v {
 	case "":
 		conf.CacheDB.Type = defCacheDB_Type
-	case "bigcache","freecache", "redis":
+	case "bigcache", "freecache", "redis":
 	default:
 		return fmt.Errorf("不支持的CacheDB: %v", v)
 	}
