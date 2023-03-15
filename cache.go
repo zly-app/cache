@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	"github.com/zly-app/component/redis"
-	"github.com/zly-app/zapp/pkg/compactor"
-	"github.com/zly-app/zapp/pkg/serializer"
 
 	"github.com/zly-app/cache/cachedb/bigcache"
 	"github.com/zly-app/cache/cachedb/freecache"
@@ -17,8 +15,8 @@ import (
 
 type Cache struct {
 	cacheDB          core.ICacheDB
-	compactor        compactor.ICompactor
-	serializer       serializer.ISerializer
+	compactor        core.ICompactor
+	serializer       core.ISerializer
 	sf               core.ISingleFlight // 单跑模块
 	expireSec        int                // 默认过期时间
 	ignoreCacheFault bool               // 是否忽略缓存数据库故障
@@ -28,7 +26,7 @@ func (c *Cache) Close() error {
 	return c.cacheDB.Close()
 }
 
-func (c *Cache) marshalQuery(data interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) ([]byte, error) {
+func (c *Cache) marshalQuery(data interface{}, serializer core.ISerializer, compactor core.ICompactor) ([]byte, error) {
 	if data == nil {
 		return nil, nil
 	}
@@ -45,7 +43,7 @@ func (c *Cache) marshalQuery(data interface{}, serializer serializer.ISerializer
 	return comData, nil
 }
 
-func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer serializer.ISerializer, compactor compactor.ICompactor) error {
+func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer core.ISerializer, compactor core.ICompactor) error {
 	if len(comData) == 0 {
 		return ErrDataIsNil
 	}
@@ -106,8 +104,8 @@ func NewCache(conf *Config) (ICache, error) {
 		cache.cacheDB = redis_cache.NewRedisCache(redisClient)
 	}
 
-	cache.compactor = compactor.GetCompactor(strings.ToLower(conf.Compactor))
-	cache.serializer = serializer.GetSerializer(strings.ToLower(conf.Serializer))
+	cache.compactor = GetCompactor(strings.ToLower(conf.Compactor))
+	cache.serializer = GetSerializer(strings.ToLower(conf.Serializer))
 	cache.sf = single_flight.GetSingleFlight(strings.ToLower(conf.SingleFlight))
 
 	return cache, nil

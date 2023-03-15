@@ -11,14 +11,14 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zly-app/zapp/pkg/compactor"
-	"github.com/zly-app/zapp/pkg/serializer"
 
+	"github.com/zly-app/cache/core"
 	"github.com/zly-app/cache/errs"
 )
 
 func makeBigCache() ICache {
 	conf := NewConfig()
+	conf.ExpireSec = 1
 	conf.CacheDB.Type = "bigcache"
 	cache, err := NewCache(conf)
 	if err != nil {
@@ -276,7 +276,7 @@ func BenchmarkGet(b *testing.B) {
 	}
 	compactors := []struct {
 		name string
-		compactor.ICompactor
+		core.ICompactor
 	}{
 		{"NoCompactor", NoCompactor},
 		//{"ZStdCompactor", ZStdCompactor},
@@ -284,7 +284,7 @@ func BenchmarkGet(b *testing.B) {
 	}
 	serializers := []struct {
 		name string
-		serializer.ISerializer
+		core.ISerializer
 	}{
 		{"MsgPackSerializer", MsgPackSerializer},
 		//{"JsonIterStandardSerializer", JsonIterStandardSerializer},
@@ -304,7 +304,7 @@ func BenchmarkGet(b *testing.B) {
 	}
 }
 
-func benchGet(b *testing.B, maxKeyCount, sizeMB int, serializer serializer.ISerializer, compactor compactor.ICompactor) {
+func benchGet(b *testing.B, maxKeyCount, sizeMB int, serializer core.ISerializer, compactor core.ICompactor) {
 	rand.Seed(time.Now().UnixNano())
 	const dataLen = 512
 

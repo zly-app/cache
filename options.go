@@ -3,17 +3,14 @@ package cache
 import (
 	"sync"
 
-	"github.com/zly-app/zapp/pkg/compactor"
-	"github.com/zly-app/zapp/pkg/serializer"
-
 	"github.com/zly-app/cache/core"
 )
 
 var optionsPool = sync.Pool{New: func() interface{} { return &options{} }}
 
 type options struct {
-	Serializer     serializer.ISerializer
-	Compactor      compactor.ICompactor
+	Serializer     core.ISerializer
+	Compactor      core.ICompactor
 	ExpireSec      int
 	LoadFn         LoadFn
 	ForceLoad      bool // 忽略缓存从加载函数加载数据
@@ -51,14 +48,14 @@ func (c *Cache) newOptions(opts []core.Option) *options {
 }
 
 // 设置序列化器, 如果设为nil则使用默认序列化器
-func WithSerializer(serializer serializer.ISerializer) core.Option {
+func WithSerializer(serializer core.ISerializer) core.Option {
 	return func(opts interface{}) {
 		opts.(*options).Serializer = serializer
 	}
 }
 
 // 设置压缩器, 如果设为nil则使用默认压缩器
-func WithCompactor(compactor compactor.ICompactor) core.Option {
+func WithCompactor(compactor core.ICompactor) core.Option {
 	return func(opts interface{}) {
 		opts.(*options).Compactor = compactor
 	}

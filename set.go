@@ -17,7 +17,13 @@ func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...c
 
 	span.LogFields(open_log.String("key", key))
 
-	err := c.set(ctx, key, data, opts...)
+	opt := c.newOptions(opts)
+	defer putOptions(opt)
+
+	bs, err := c.marshalQuery(data, opt.Serializer, opt.Compactor)
+	if err == nil {
+		err = c.set(ctx, key, bs, opt)
+	}
 	if err != nil {
 		span.SetTag("error", true)
 		span.LogFields(open_log.Error(err))
@@ -25,16 +31,8 @@ func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...c
 	return err
 }
 
-func (c *Cache) set(ctx context.Context, key string, data interface{}, opts ...core.Option) error {
-	opt := c.newOptions(opts)
-	defer putOptions(opt)
-
-	bs, err := c.marshalQuery(data, opt.Serializer, opt.Compactor)
-	if err != nil {
-		return fmt.Errorf("编码数据失败: %v", err)
-	}
-
-	err = c.cacheDB.Set(ctx, key, bs, opt.ExpireSec)
+func (c *Cache) set(ctx context.Context, key string, bs []byte, opt *options) error {
+	err := c.cacheDB.Set(ctx, key, bs, opt.ExpireSec)
 	if err != nil {
 		return fmt.Errorf("写入缓存失败: %v", err)
 	}

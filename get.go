@@ -19,17 +19,20 @@ func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...c
 
 	span.LogFields(open_log.String("key", key))
 
-	err := c.get(ctx, key, aPtr, opts...)
+	opt := c.newOptions(opts)
+	defer putOptions(opt)
+
+	comData, err := c.getRaw(ctx, key, opt)
+	if err == nil {
+		err = c.unmarshalQuery(comData, aPtr, opt.Serializer, opt.Compactor)
+	}
 	if err != nil {
 		span.SetTag("error", true)
 		span.LogFields(open_log.Error(err))
 	}
 	return err
 }
-func (c *Cache) get(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
-	opt := c.newOptions(opts)
-	defer putOptions(opt)
-
+func (c *Cache) getRaw(ctx context.Context, key string, opt *options) ([]byte, error) {
 	var bs []byte
 	cacheErr := ErrCacheMiss
 	if !opt.ForceLoad {
@@ -37,7 +40,7 @@ func (c *Cache) get(ctx context.Context, key string, aPtr interface{}, opts ...c
 	}
 
 	if cacheErr == nil {
-		return c.unmarshalQuery(bs, aPtr, opt.Serializer, opt.Compactor)
+		return bs, nil
 	}
 	if cacheErr != ErrCacheMiss { // 缓存故障
 		if c.ignoreCacheFault {
@@ -45,19 +48,16 @@ func (c *Cache) get(ctx context.Context, key string, aPtr interface{}, opts ...c
 		}
 		cacheErr = fmt.Errorf("从缓存数据库加载数据故障: err: %v", cacheErr)
 		if !c.ignoreCacheFault { // 如果不忽略缓存故障则直接报告错误
-			return cacheErr
+			return nil, cacheErr
 		}
 	}
 	if opt.LoadFn == nil {
-		return cacheErr
+		return nil, cacheErr
 	}
 
 	// 加载数据
 	bs, err := c.sf.Do(ctx, key, c.load(opt))
-	if err != nil {
-		return err
-	}
-	return c.unmarshalQuery(bs, aPtr, opt.Serializer, opt.Compactor)
+	return bs, err
 }
 
 func (c *Cache) load(opt *options) core.LoadInvoke {

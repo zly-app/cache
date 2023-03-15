@@ -10,24 +10,32 @@ import (
 
 var (
 	// msgPack 序列化器
-	MsgPackSerializer = serializer.GetSerializer(serializer.MsgPackSerializerName)
+	MsgPackSerializer = GetSerializer(serializer.MsgPackSerializerName)
 	// jsonIter 实现的模拟内置 json 序列化器
-	JsonIterStandardSerializer = serializer.GetSerializer(serializer.JsonIterStandardSerializerName)
+	JsonIterStandardSerializer = GetSerializer(serializer.JsonIterStandardSerializerName)
 	// jsonIter序列化器
-	JsonIterSerializer = serializer.GetSerializer(serializer.JsonIterSerializerName)
+	JsonIterSerializer = GetSerializer(serializer.JsonIterSerializerName)
 	// json序列化器
-	JsonSerializer = serializer.GetSerializer(serializer.JsonSerializerName)
+	JsonSerializer = GetSerializer(serializer.JsonSerializerName)
 	// yaml 序列化器
-	YamlSerializer = serializer.GetSerializer(serializer.YamlSerializerName)
+	YamlSerializer = GetSerializer(serializer.YamlSerializerName)
+
+	GetSerializer = func(name string) core.ISerializer {
+		return serializer.GetSerializer(name)
+	}
 )
 
 var (
 	// 不压缩
-	NoCompactor = compactor.GetCompactor(compactor.RawCompactorName)
+	NoCompactor = GetCompactor(compactor.RawCompactorName)
 	// zStd 压缩器
-	ZStdCompactor = compactor.GetCompactor(compactor.ZStdCompactorName)
+	ZStdCompactor = GetCompactor(compactor.ZStdCompactorName)
 	// Gzip 压缩器
-	GzipCompactor = compactor.GetCompactor(compactor.GzipCompactorName)
+	GzipCompactor = GetCompactor(compactor.GzipCompactorName)
+	// 获取压缩器, 压缩器不存在会panic
+	GetCompactor = func(name string) core.ICompactor {
+		return compactor.GetCompactor(name)
+	}
 )
 
 var (

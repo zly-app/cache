@@ -93,7 +93,7 @@ components:
       Compactor: raw # 默认压缩器名, 可选 raw, zstd, gzip
       Serializer: msgpack # 默认序列化器名, 可选 msgpack, jsoniter_standard, jsoniter, json, yaml
       SingleFlight: single # 默认单跑模块, 可选 no, single
-      ExpireSec: 0 # 默认有效时间, 秒, <= 0 表示永久
+      ExpireSec: 0 # 默认过期时间, 秒, < 1 表示永久
       IgnoreCacheFault: false # 是否忽略缓存数据库故障, 如果设为true, 在缓存数据库故障时从加载器获取数据, 这会导致缓存击穿. 如果设为false, 在缓存数据库故障时直接返回错误
       CacheDB:
         Type: freecache # 缓存数据库类型, 支持 no, bigcache, freecache, redis

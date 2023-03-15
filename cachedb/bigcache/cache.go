@@ -39,6 +39,9 @@ func (m *bigCache) Close() error {
 
 // memoryMB 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
 func NewCache(shards, expireSec, cleanTimeMs, maxEntriesInWindow, maxEntrySize int) (core.ICacheDB, error) {
+	if expireSec <= 0 {
+		expireSec = 31536000000 // 1000年
+	}
 	conf := bigcache.Config{
 		Shards:             shards,
 		LifeWindow:         time.Duration(expireSec) * time.Second,
