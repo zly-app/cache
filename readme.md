@@ -102,6 +102,7 @@ components:
           CleanTimeSec: 60 # 清理周期秒数, 为 0 时不自动清理. 注意, 官方库是会影响到expire的, 而这个不会影响到expire
           MaxEntriesInWindow: 600000 # 初始化时申请允许储存的条目数的内存, 当实际使用量超过当前最大量时会触发内存重分配
           MaxEntrySize: 500 # 初始化时申请的每个条目的占用内存, 单位字节, 当实际使用量超过当前最大量时会触发内存重分配
+          HardMaxCacheSize: 1048576 # 最大占用内存大小, 单位 mb, 0 表示不限制
         FreeCache: # memory 内存配置
           SizeMB: 1 # 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
         Redis: # redis 内存配置
