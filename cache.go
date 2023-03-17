@@ -87,18 +87,7 @@ func NewCache(conf *Config) (ICache, error) {
 	case "freecache":
 		cache.cacheDB = freecache.NewCache(conf.CacheDB.FreeCache.SizeMB)
 	case "redis":
-		redisClient, err := redis.NewClient(&redis.RedisConfig{
-			Address:         conf.CacheDB.Redis.Address,
-			UserName:        conf.CacheDB.Redis.UserName,
-			Password:        conf.CacheDB.Redis.Password,
-			DB:              conf.CacheDB.Redis.DB,
-			IsCluster:       conf.CacheDB.Redis.IsCluster,
-			MinIdleConns:    conf.CacheDB.Redis.MinIdleConns,
-			PoolSize:        conf.CacheDB.Redis.PoolSize,
-			ReadTimeoutSec:  conf.CacheDB.Redis.ReadTimeoutSec,
-			WriteTimeoutSec: conf.CacheDB.Redis.WriteTimeoutSec,
-			DialTimeoutSec:  conf.CacheDB.Redis.DialTimeoutSec,
-		})
+		redisClient, err := redis.NewClient(&conf.CacheDB.Redis)
 		if err != nil {
 			return nil, fmt.Errorf("创建redis客户端失败: %v", err)
 		}

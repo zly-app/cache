@@ -106,16 +106,20 @@ components:
         FreeCache: # memory 内存配置
           SizeMB: 1 # 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
         Redis: # redis 内存配置
-          Address: 127.0.0.1:6379 # 地址: host1:port1,host2:port2
-          UserName: '' # 用户名
-          Password: '' # 密码
+          Address: localhost:6379 # 地址: host1:port1,host2:port2
+          UserName: "" # 用户名                     
+          Password: "" # 密码
           DB: 0 # db, 只有非集群有效
-          IsCluster: false # 是否为集群
-          MinIdleConns: 2 # 最小空闲连接数
-          PoolSize: 5 # 客户端池大小
-          ReadTimeoutSec: 5 # 读取超时, 单位秒
-          WriteTimeoutSec: 5 # 写入超时, 单位秒
-          DialTimeoutSec: 5 # 连接超时, 单位秒
+          MinIdle: 2 # 最小闲置连接数
+          MaxIdle: 4 # 最大闲置连接数
+          PoolSize: 10 # 客户端池大小
+          IdleTimeout: 3600 # 空闲链接超时时间, 单位秒, 如果一个连接长时间未使用将被视为连接无效, 小于1表示永不超时
+          WaitTimeout: 5 # 等待获取连接的超时时间, 单位秒
+          ConnectTimeout: 5 # 连接超时, 单位秒
+          MaxConnLifetime: 3600 # 一个连接最大存活时间, 单位秒, 小于1表示不限制
+          MaxRetries: 0 # 操作尝试次数, <1 表示不重试
+          ReadTimeoutSec: 5 # 超时, 秒
+          WriteTimeoutSec: 5 # 超时, 秒
 ```
 
 
