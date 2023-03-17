@@ -40,14 +40,15 @@ func main() {
 	localCache, _ := cache.NewCache(cache.NewConfig()) // 模拟本地缓存
 	redisCache, _ := cache.NewCache(cache.NewConfig()) // 模拟redis缓存
 
-	// 从db加载
+	// redis缓存失效时从db加载
 	loadFromDB := func(ctx context.Context, key string) (interface{}, error) {
+		// 从db加载
 		return "hello", nil
 	}
-	// 从本地缓存加载
+	// 本地缓存失效时从redis加载
 	loadFromCache := func(ctx context.Context, key string) (interface{}, error) {
 		var result string
-		// 一旦本地缓存失效, 从redis加载
+		// 从redis加载
 		err := redisCache.Get(ctx, key, &result,
 			cache.WithLoadFn(loadFromDB), // 如果redis缓存未命中会从db加载
 		)
@@ -64,7 +65,7 @@ func main() {
 }
 ```
 
-# zapp 组件接入
+# zapp 接入
 
 ```go
 func main() {
@@ -76,11 +77,11 @@ func main() {
 	cacheDef := creator.GetCache("default") // 通过cache建造者获取cache
 
 	var a string
-	_ = cacheDef.Get(context.Background(), "key", &a,
+	err := cacheDef.Get(context.Background(), "key", &a,
 		cache.WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
 			return "hello", nil
 		}))
-	app.Info(a)
+	app.Info(a, zap.Error(err))
 }
 ```
 
@@ -161,5 +162,5 @@ components:
 
 # 如何解决缓存穿透
 
-+ 我们提供了一个占位符, 如果在loader结果中返回 `nil`, 我们会将它存入缓存, 当你在获取它的时候会收到错误 `cache.ErrDataIsNil`
++ 我们提供了一个占位符, 如果在loader结果中返回 `nil`, 我们会将它存入缓存并返回 `cache.ErrDataIsNil`, 当你再次获取它的时候会仍然会收到错误 `cache.ErrDataIsNil`
 + 在用户请求key的时候预判断它是否可能不存在, 比如判断id长度不等于16(不符合业务逻辑)的请求直接返回数据不存在错误
