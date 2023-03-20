@@ -12,9 +12,10 @@ var Trace = new(traceCli)
 
 type traceCli struct{}
 
-func (c *traceCli) TraceStart(ctx context.Context, method string, attributes ...utils.OtelSpanKV) context.Context {
+func (c *traceCli) TraceStart(ctx context.Context, cacheName, method string, attributes ...utils.OtelSpanKV) context.Context {
 	// 生成新的 span
-	ctx, span := utils.Otel.StartSpan(ctx, "cache/"+method,
+	ctx, span := utils.Otel.StartSpan(ctx, "cache/"+cacheName+"/"+method,
+		utils.OtelSpanKey("cacheName").String(cacheName),
 		utils.OtelSpanKey("method").String(method),
 	)
 

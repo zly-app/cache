@@ -43,6 +43,7 @@ func (c *cacheCreatorAdapter) makeCache(name string) (conn.IInstance, error) {
 		return nil, fmt.Errorf("cache配置错误: %v", err)
 	}
 
+	conf.CacheName = name
 	cache, err := NewCache(conf)
 	if err != nil {
 		return nil, fmt.Errorf("cache创建失败: %v", err)

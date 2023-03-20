@@ -20,7 +20,7 @@ func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}
 		pkg.Trace.AttrKey(key),
 	}
 	attr = append(attr, opt.MakeTraceAttr()...)
-	ctx = pkg.Trace.TraceStart(ctx, "SingleFlightDo", attr...)
+	ctx = pkg.Trace.TraceStart(ctx, c.cacheName, "SingleFlightDo", attr...)
 	defer pkg.Trace.TraceEnd(ctx)
 
 	comData, err := c.singleFlightDo(ctx, key, opt)

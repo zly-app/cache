@@ -91,6 +91,7 @@ func main() {
 components:
   cache:
     default:
+      CacheName: 'cache' # 缓存器的名称, 在 trace 和 Metrics 上报时有用
       Compactor: raw # 默认压缩器名, 可选 raw, zstd, gzip
       Serializer: msgpack # 默认序列化器名, 可选 msgpack, jsoniter_standard, jsoniter, json, yaml
       SingleFlight: single # 默认单跑模块, 可选 no, single

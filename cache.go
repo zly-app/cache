@@ -14,6 +14,7 @@ import (
 )
 
 type Cache struct {
+	cacheName        string
 	cacheDB          core.ICacheDB
 	compactor        core.ICompactor
 	serializer       core.ISerializer
@@ -67,6 +68,7 @@ func NewCache(conf *Config) (ICache, error) {
 	}
 
 	cache := &Cache{
+		cacheName:        conf.CacheName,
 		expireSec:        conf.ExpireSec,
 		ignoreCacheFault: conf.IgnoreCacheFault,
 	}

@@ -19,7 +19,7 @@ func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...c
 		pkg.Trace.AttrData(data),
 	}
 	attr = append(attr, opt.MakeTraceAttr()...)
-	ctx = pkg.Trace.TraceStart(ctx, "Set", attr...)
+	ctx = pkg.Trace.TraceStart(ctx, c.cacheName, "Set", attr...)
 	defer pkg.Trace.TraceEnd(ctx)
 
 	bs, err := c.marshalQuery(data, opt.Serializer, opt.Compactor)

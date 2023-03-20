@@ -20,7 +20,7 @@ func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...c
 		pkg.Trace.AttrKey(key),
 	}
 	attr = append(attr, opt.MakeTraceAttr()...)
-	ctx = pkg.Trace.TraceStart(ctx, "Get", attr...)
+	ctx = pkg.Trace.TraceStart(ctx, c.cacheName, "Get", attr...)
 	defer pkg.Trace.TraceEnd(ctx)
 
 	comData, err := c.getRaw(ctx, key, opt)

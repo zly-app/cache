@@ -7,7 +7,7 @@ import (
 )
 
 func (c *Cache) Del(ctx context.Context, keys ...string) error {
-	ctx = pkg.Trace.TraceStart(ctx, "Del", pkg.Trace.AttrKeys(keys))
+	ctx = pkg.Trace.TraceStart(ctx, c.cacheName, "Del", pkg.Trace.AttrKeys(keys))
 	defer pkg.Trace.TraceEnd(ctx)
 
 	err := c.del(ctx, keys...)
