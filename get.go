@@ -16,7 +16,11 @@ func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...c
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
-	ctx = pkg.Trace.TraceStart(ctx, "Get", pkg.Trace.AttrKey(key), opt.MakeTraceAttr()...)
+	attr := []utils.OtelSpanKV{
+		pkg.Trace.AttrKey(key),
+	}
+	attr = append(attr, opt.MakeTraceAttr()...)
+	ctx = pkg.Trace.TraceStart(ctx, "Get", attr...)
 	defer pkg.Trace.TraceEnd(ctx)
 
 	comData, err := c.getRaw(ctx, key, opt)
@@ -37,6 +41,9 @@ func (c *Cache) getRaw(ctx context.Context, key string, opt *options) ([]byte, e
 	if cacheErr == nil {
 		return bs, nil
 	}
+
+	pkg.Trace.TraceCacheErr(ctx, cacheErr)
+
 	if cacheErr != ErrCacheMiss { // 缓存故障
 		if c.ignoreCacheFault {
 			logger.Log.Error("从缓存数据库加载数据故障", zap.String("key", key), zap.Error(cacheErr))

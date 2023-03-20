@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/zly-app/zapp/pkg/utils"
+
 	"github.com/zly-app/cache/core"
 	"github.com/zly-app/cache/pkg"
 )
@@ -14,7 +16,11 @@ func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}
 	defer putOptions(opt)
 	opt.ForceLoad = true // 强行从加载函数加载
 
-	ctx = pkg.Trace.TraceStart(ctx, "SingleFlightDo", pkg.Trace.AttrKey(key), opt.MakeTraceAttr()...)
+	attr := []utils.OtelSpanKV{
+		pkg.Trace.AttrKey(key),
+	}
+	attr = append(attr, opt.MakeTraceAttr()...)
+	ctx = pkg.Trace.TraceStart(ctx, "SingleFlightDo", attr...)
 	defer pkg.Trace.TraceEnd(ctx)
 
 	comData, err := c.singleFlightDo(ctx, key, opt)

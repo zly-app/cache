@@ -12,16 +12,13 @@ var Trace = new(traceCli)
 
 type traceCli struct{}
 
-func (c *traceCli) TraceStart(ctx context.Context, method string, attribute utils.OtelSpanKV,
-	attributes ...utils.OtelSpanKV) context.Context {
+func (c *traceCli) TraceStart(ctx context.Context, method string, attributes ...utils.OtelSpanKV) context.Context {
 	// 生成新的 span
-	ctx, span := utils.Otel.StartSpan(ctx, "cache.method."+method,
-		utils.OtelSpanKey("method").String(method))
+	ctx, span := utils.Otel.StartSpan(ctx, "cache/"+method,
+		utils.OtelSpanKey("method").String(method),
+	)
 
-	attr := []utils.OtelSpanKV{
-		attribute,
-		c.getOtelSpanKVWithDeadline(ctx),
-	}
+	attr := []utils.OtelSpanKV{c.getOtelSpanKVWithDeadline(ctx)}
 	attr = append(attr, attributes...)
 	utils.Otel.AddSpanEvent(span, "req", attr...)
 	return ctx
@@ -39,6 +36,15 @@ func (*traceCli) getOtelSpanKVWithDeadline(ctx context.Context) utils.OtelSpanKV
 	}
 	d := deadline.Sub(time.Now()) // 剩余时间
 	return utils.OtelSpanKey("ctx.deadline").String(d.String())
+}
+
+func (c *traceCli) TraceCacheErr(ctx context.Context, err error) {
+	span := utils.Otel.GetSpan(ctx)
+	attr := []utils.OtelSpanKV{
+		c.getOtelSpanKVWithDeadline(ctx),
+		utils.OtelSpanKey("err.detail").String(err.Error()),
+	}
+	utils.Otel.AddSpanEvent(span, "cache err", attr...)
 }
 
 func (c *traceCli) TraceReply(ctx context.Context, reply interface{}, err error) {
@@ -65,4 +71,9 @@ func (c *traceCli) AttrKey(key string) utils.OtelSpanKV {
 }
 func (c *traceCli) AttrKeys(keys []string) utils.OtelSpanKV {
 	return utils.OtelSpanKey("keys").StringSlice(keys)
+}
+
+func (c *traceCli) AttrData(data interface{}) utils.OtelSpanKV {
+	text, _ := jsoniter.MarshalToString(data)
+	return utils.OtelSpanKey("data").String(text)
 }

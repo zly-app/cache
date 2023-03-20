@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/zly-app/zapp/pkg/utils"
+
 	"github.com/zly-app/cache/core"
 	"github.com/zly-app/cache/pkg"
 )
@@ -12,7 +14,12 @@ func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...c
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
-	ctx = pkg.Trace.TraceStart(ctx, "Set", pkg.Trace.AttrKey(key), opt.MakeTraceAttr()...)
+	attr := []utils.OtelSpanKV{
+		pkg.Trace.AttrKey(key),
+		pkg.Trace.AttrData(data),
+	}
+	attr = append(attr, opt.MakeTraceAttr()...)
+	ctx = pkg.Trace.TraceStart(ctx, "Set", attr...)
 	defer pkg.Trace.TraceEnd(ctx)
 
 	bs, err := c.marshalQuery(data, opt.Serializer, opt.Compactor)
