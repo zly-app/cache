@@ -4,32 +4,27 @@ import (
 	"context"
 	"fmt"
 
-	open_log "github.com/opentracing/opentracing-go/log"
 	"github.com/zly-app/zapp/logger"
 	"github.com/zly-app/zapp/pkg/utils"
 	"go.uber.org/zap"
 
 	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/pkg"
 )
 
 func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
-	span := utils.Trace.GetChildSpan(ctx, "cache.Get")
-	defer span.Finish()
-	ctx = utils.Trace.SaveSpan(ctx, span)
-
-	span.LogFields(open_log.String("key", key))
-
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
+
+	ctx = pkg.Trace.TraceStart(ctx, "Get", pkg.Trace.AttrKey(key), opt.MakeTraceAttr()...)
+	defer pkg.Trace.TraceEnd(ctx)
 
 	comData, err := c.getRaw(ctx, key, opt)
 	if err == nil {
 		err = c.unmarshalQuery(comData, aPtr, opt.Serializer, opt.Compactor)
 	}
-	if err != nil {
-		span.SetTag("error", true)
-		span.LogFields(open_log.Error(err))
-	}
+
+	pkg.Trace.TraceReply(ctx, aPtr, err)
 	return err
 }
 func (c *Cache) getRaw(ctx context.Context, key string, opt *options) ([]byte, error) {

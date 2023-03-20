@@ -4,30 +4,23 @@ import (
 	"context"
 	"fmt"
 
-	open_log "github.com/opentracing/opentracing-go/log"
-	"github.com/zly-app/zapp/pkg/utils"
-
 	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/pkg"
 )
 
 func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...core.Option) error {
-	span := utils.Trace.GetChildSpan(ctx, "cache.Set")
-	defer span.Finish()
-	ctx = utils.Trace.SaveSpan(ctx, span)
-
-	span.LogFields(open_log.String("key", key))
-
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
+
+	ctx = pkg.Trace.TraceStart(ctx, "Set", pkg.Trace.AttrKey(key), opt.MakeTraceAttr()...)
+	defer pkg.Trace.TraceEnd(ctx)
 
 	bs, err := c.marshalQuery(data, opt.Serializer, opt.Compactor)
 	if err == nil {
 		err = c.set(ctx, key, bs, opt)
 	}
-	if err != nil {
-		span.SetTag("error", true)
-		span.LogFields(open_log.Error(err))
-	}
+
+	pkg.Trace.TraceReply(ctx, "ok", err)
 	return err
 }
 

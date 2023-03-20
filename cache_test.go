@@ -244,11 +244,13 @@ func testSF(t *testing.T, cache ICache) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := cache.SingleFlightDo(context.Background(), key, WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
+		var temp int
+		err := cache.SingleFlightDo(context.Background(), key, &temp, WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
 			loadB = true
 			return a, nil
 		}))
 		require.Nil(t, err)
+		require.Equal(t, a, temp)
 	}()
 
 	wg.Wait()

@@ -16,7 +16,7 @@ type ICache interface {
 	Set(ctx context.Context, key string, data interface{}, opts ...Option) error
 
 	// 单跑执行, 忽略缓存直接从db加载数据, 默认不会自动写入缓存, 必须设置 LoadFn
-	SingleFlightDo(ctx context.Context, key string, opts ...Option) error
+	SingleFlightDo(ctx context.Context, key string, aPtr interface{}, opts ...Option) error
 
 	// 删除
 	Del(ctx context.Context, keys ...string) error

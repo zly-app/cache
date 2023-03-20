@@ -3,22 +3,16 @@ package cache
 import (
 	"context"
 
-	open_log "github.com/opentracing/opentracing-go/log"
-	"github.com/zly-app/zapp/pkg/utils"
+	"github.com/zly-app/cache/pkg"
 )
 
 func (c *Cache) Del(ctx context.Context, keys ...string) error {
-	span := utils.Trace.GetChildSpan(ctx, "cache.Del")
-	defer span.Finish()
-	ctx = utils.Trace.SaveSpan(ctx, span)
-
-	span.LogFields(open_log.Object("keys", keys))
+	ctx = pkg.Trace.TraceStart(ctx, "Del", pkg.Trace.AttrKeys(keys))
+	defer pkg.Trace.TraceEnd(ctx)
 
 	err := c.del(ctx, keys...)
-	if err != nil {
-		span.SetTag("error", true)
-		span.LogFields(open_log.Error(err))
-	}
+
+	pkg.Trace.TraceReply(ctx, "ok", err)
 	return err
 }
 func (c *Cache) del(ctx context.Context, keys ...string) error {

@@ -3,6 +3,8 @@ package cache
 import (
 	"sync"
 
+	"github.com/zly-app/zapp/pkg/utils"
+
 	"github.com/zly-app/cache/core"
 )
 
@@ -15,6 +17,10 @@ type options struct {
 	LoadFn         LoadFn
 	ForceLoad      bool // 忽略缓存从加载函数加载数据
 	DontWriteCache bool // 不要刷新到缓存
+}
+
+func (o *options) MakeTraceAttr() []utils.OtelSpanKV {
+	return nil
 }
 
 func getOptions() *options {
