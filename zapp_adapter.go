@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/zly-app/zapp/component/conn"
+	"github.com/zly-app/zapp/consts"
 	"github.com/zly-app/zapp/core"
 )
 
@@ -12,6 +13,7 @@ const defComponentType core.ComponentType = "cache"
 
 type ICacheCreator interface {
 	GetCache(name string) ICache
+	GetDefCache() ICache
 	Close()
 }
 
@@ -30,6 +32,10 @@ type cacheCreatorAdapter struct {
 
 func (c *cacheCreatorAdapter) GetCache(name string) ICache {
 	return c.conn.GetInstance(c.makeCache, name).(*instance).cache
+}
+
+func (c *cacheCreatorAdapter) GetDefCache() ICache {
+	return c.conn.GetInstance(c.makeCache, consts.DefaultComponentName).(*instance).cache
 }
 
 func (c *cacheCreatorAdapter) Close() {
