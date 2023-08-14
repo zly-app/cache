@@ -5,13 +5,17 @@ import (
 	"strings"
 
 	"github.com/zly-app/component/redis"
+	"github.com/zly-app/zapp/pkg/compactor"
+	"github.com/zly-app/zapp/pkg/serializer"
+
+	"github.com/zly-app/cache/single_flight"
 )
 
 const (
 	defCacheName = "default"
 
 	defCompactor        = "raw"
-	defSerializer       = "msgpack"
+	defSerializer       = "jsoniter"
 	defSingleFlight     = "single"
 	defExpireSec        = 0
 	defIgnoreCacheFault = false
@@ -78,33 +82,33 @@ func (conf *Config) Check() error {
 	switch v := strings.ToLower(conf.CacheDB.Type); v {
 	case "":
 		conf.CacheDB.Type = defCacheDB_Type
-	case "bigcache", "freecache", "redis":
+	case "no", "bigcache", "freecache", "redis":
 	default:
 		return fmt.Errorf("不支持的CacheDB: %v", v)
 	}
 
-	switch v := strings.ToLower(conf.Compactor); v {
-	case "":
+	if conf.Compactor == "" {
 		conf.Compactor = defCompactor
-	case "raw", "gzip", "zstd":
-	default:
-		return fmt.Errorf("不支持的Compactor: %v", v)
+	}
+	_, ok := compactor.TryGetCompactor(conf.Compactor)
+	if !ok {
+		return fmt.Errorf("不支持的Compactor: %v", conf.Compactor)
 	}
 
-	switch v := strings.ToLower(conf.Serializer); v {
-	case "":
+	if conf.Serializer == "" {
 		conf.Serializer = defSerializer
-	case "json", "jsoniter", "jsoniter_standard", "msgpack", "yaml":
-	default:
-		return fmt.Errorf("不支持的Serializer: %v", v)
+	}
+	_, ok = serializer.TryGetSerializer(conf.Serializer)
+	if !ok {
+		return fmt.Errorf("不支持的Serializer: %v", conf.Serializer)
 	}
 
-	switch v := strings.ToLower(conf.SingleFlight); v {
-	case "":
+	if conf.SingleFlight == "" {
 		conf.SingleFlight = defSingleFlight
-	case "no", "single":
-	default:
-		return fmt.Errorf("不支持的Serializer: %v", v)
+	}
+	_, ok = single_flight.TryGetSingleFlight(conf.SingleFlight)
+	if !ok {
+		return fmt.Errorf("不支持的Serializer: %v", conf.SingleFlight)
 	}
 
 	if conf.CacheDB.BigCache.Shards < 1 {

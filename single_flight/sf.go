@@ -36,3 +36,9 @@ func GetSingleFlight(name string) core.ISingleFlight {
 	}
 	return creator()
 }
+
+// 获取
+func TryGetSingleFlight(name string) (core.ISingleFlight, bool) {
+	creator, ok := sfs[name]
+	return creator(), ok
+}
