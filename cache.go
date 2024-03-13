@@ -82,6 +82,7 @@ func NewCache(conf *Config) (ICache, error) {
 			conf.CacheDB.BigCache.MaxEntriesInWindow,
 			conf.CacheDB.BigCache.MaxEntrySize,
 			conf.CacheDB.BigCache.HardMaxCacheSize,
+			conf.CacheDB.BigCache.ExactExpire,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("创建bigcache失败: %v", err)

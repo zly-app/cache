@@ -11,10 +11,18 @@ import (
 )
 
 type bigCache struct {
-	cache *bigcache.BigCache
+	cache       *bigcache.BigCache
+	exactExpire bool
 }
 
 func (m *bigCache) Get(ctx context.Context, key string) ([]byte, error) {
+	if !m.exactExpire {
+		data, err := m.cache.Get(key)
+		if err == bigcache.ErrEntryNotFound {
+			return nil, errs.CacheMiss
+		}
+		return data, err
+	}
 	data, info, err := m.cache.GetWithInfo(key)
 	if err == bigcache.ErrEntryNotFound || info.EntryStatus != 0 {
 		return nil, errs.CacheMiss
@@ -37,7 +45,7 @@ func (m *bigCache) Close() error {
 	return m.cache.Close()
 }
 
-func NewCache(shards, expireSec, cleanTimeMs, maxEntriesInWindow, maxEntrySize, hardMaxCacheSize int) (core.ICacheDB, error) {
+func NewCache(shards, expireSec, cleanTimeMs, maxEntriesInWindow, maxEntrySize, hardMaxCacheSize int, exactExpire bool) (core.ICacheDB, error) {
 	if expireSec <= 0 {
 		expireSec = 31536000000 // 1000年
 	}
@@ -51,6 +59,7 @@ func NewCache(shards, expireSec, cleanTimeMs, maxEntriesInWindow, maxEntrySize, 
 	}
 	cache, err := bigcache.New(context.Background(), conf)
 	return &bigCache{
-		cache: cache,
+		cache:       cache,
+		exactExpire: exactExpire,
 	}, err
 }

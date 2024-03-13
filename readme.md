@@ -99,12 +99,13 @@ components:
       IgnoreCacheFault: false # 是否忽略缓存数据库故障, 如果设为true, 在缓存数据库故障时从加载器获取数据, 这会导致缓存击穿. 如果设为false, 在缓存数据库故障时直接返回错误
       CacheDB:
         Type: freecache # 缓存数据库类型, 支持 no, bigcache, freecache, redis
-        BigCache:
+        BigCache: # 注意: bigcache 仅支持整体的过期时间, 不支持对单个key设置过期时间.
           Shards: 1024 # 分片数, 必须是2的幂
-          CleanTimeSec: 60 # 清理周期秒数, 为 0 时不自动清理. 注意, 官方库是会影响到expire的, 而这个不会影响到expire
+          CleanTimeSec: 60 # 清理周期秒数, 为 0 时不自动清理.
           MaxEntriesInWindow: 600000 # 初始化时申请允许储存的条目数的内存, 当实际使用量超过当前最大量时会触发内存重分配
           MaxEntrySize: 500 # 初始化时申请的每个条目的占用内存, 单位字节, 当实际使用量超过当前最大量时会触发内存重分配
-          HardMaxCacheSize: 1048576 # 最大占用内存大小, 单位 mb, 0 表示不限制
+          HardMaxCacheSize: 0 # 最大占用内存大小, 单位 mb, 0 表示不限制
+          ExactExpire: false # 精准过期时间, 官方库的过期时间在 [Expire, Expire+CleanTimeSec] 区间. 如果设为true, 则过期时间精确为 Expire
         FreeCache: # memory 内存配置
           SizeMB: 1 # 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
         Redis: # redis 内存配置
