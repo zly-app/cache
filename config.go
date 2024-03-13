@@ -17,7 +17,7 @@ const (
 	defCompactor        = "raw"
 	defSerializer       = "jsoniter"
 	defSingleFlight     = "single"
-	defExpireSec        = 0
+	defExpireSec        = 300
 	defIgnoreCacheFault = false
 
 	defCacheDB_Type = "bigcache"
