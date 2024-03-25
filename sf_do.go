@@ -4,31 +4,44 @@ import (
 	"context"
 	"errors"
 
-	"github.com/zly-app/zapp/pkg/utils"
+	"github.com/zly-app/zapp/filter"
 
 	"github.com/zly-app/cache/core"
-	"github.com/zly-app/cache/pkg"
 )
+
+type singleFlightDoReq struct {
+	Key            string
+	opt            *options
+	ExpireSec      int
+	ForceLoad      bool // 忽略缓存从加载函数加载数据
+	DontWriteCache bool // 不要刷新到缓存
+}
 
 func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
 	opts = append([]core.Option{WithForceLoad(true)}, opts...)
 	opt := c.newOptions(opts)
-	defer putOptions(opt)
 	opt.ForceLoad = true // 强行从加载函数加载
+	defer putOptions(opt)
 
-	attr := []utils.OtelSpanKV{
-		pkg.Trace.AttrKey(key),
+	ctx, chain := filter.GetClientFilter(ctx, string(defComponentType), c.cacheName, "SingleFlightDo")
+	r := &singleFlightDoReq{
+		Key:            key,
+		opt:            opt,
+		ExpireSec:      opt.ExpireSec,
+		ForceLoad:      opt.ForceLoad,
+		DontWriteCache: opt.DontWriteCache,
 	}
-	attr = append(attr, opt.MakeTraceAttr()...)
-	ctx = pkg.Trace.TraceStart(ctx, c.cacheName, "SingleFlightDo", attr...)
-	defer pkg.Trace.TraceEnd(ctx)
+	sp := aPtr
+	err := chain.HandleInject(ctx, r, sp, func(ctx context.Context, req, rsp interface{}) error {
+		r := req.(*singleFlightDoReq)
+		sp := rsp
 
-	comData, err := c.singleFlightDo(ctx, key, opt)
-	if err == nil {
-		err = c.unmarshalQuery(comData, aPtr, opt.Serializer, opt.Compactor)
-	}
-
-	pkg.Trace.TraceReply(ctx, aPtr, err)
+		comData, err := c.singleFlightDo(ctx, r.Key, r.opt)
+		if err == nil {
+			err = c.unmarshalQuery(comData, sp, r.opt.Serializer, r.opt.Compactor)
+		}
+		return err
+	})
 	return err
 }
 
