@@ -46,7 +46,7 @@ func main() {
 		return "hello", nil
 	}
 	// 本地缓存失效时从redis加载
-	loadFromCache := func(ctx context.Context, key string) (interface{}, error) {
+	loadFromRedisCache := func(ctx context.Context, key string) (interface{}, error) {
 		var result string
 		// 从redis加载
 		err := redisCache.Get(ctx, key, &result,
@@ -58,7 +58,7 @@ func main() {
 	var a string
 	_ = localCache.Get(context.Background(), "key", &a,
 		// 设置本地缓存缓存加载数据的方式
-		cache.WithLoadFn(loadFromCache),
+		cache.WithLoadFn(loadFromRedisCache),
 	)
 
 	print(a) // hello
