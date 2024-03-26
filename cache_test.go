@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/zly-app/cache/core"
-	"github.com/zly-app/cache/errs"
+	"github.com/zly-app/cache/v2/core"
+	"github.com/zly-app/cache/v2/errs"
 )
 
 func makeBigCache() ICache {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/zly-app/zapp/filter"
 
-	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/v2/core"
 )
 
 type setReq struct {

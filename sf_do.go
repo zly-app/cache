@@ -6,7 +6,7 @@ import (
 
 	"github.com/zly-app/zapp/filter"
 
-	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/v2/core"
 )
 
 func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {

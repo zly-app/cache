@@ -8,7 +8,7 @@ import (
 	"github.com/zly-app/zapp/pkg/compactor"
 	"github.com/zly-app/zapp/pkg/serializer"
 
-	"github.com/zly-app/cache/single_flight"
+	"github.com/zly-app/cache/v2/single_flight"
 )
 
 const (

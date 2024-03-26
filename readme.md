@@ -33,7 +33,7 @@ package main
 import (
 	"context"
 
-	"github.com/zly-app/cache"
+	"github.com/zly-app/cache/v2"
 )
 
 func main() {

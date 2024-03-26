@@ -9,7 +9,7 @@ import (
 	"github.com/zly-app/zapp/pkg/utils"
 	"go.uber.org/zap"
 
-	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/v2/core"
 )
 
 type getReq struct {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/zly-app/zapp/pkg/utils"
 
-	"github.com/zly-app/cache/core"
+	"github.com/zly-app/cache/v2/core"
 )
 
 var optionsPool = sync.Pool{New: func() interface{} { return &options{} }}

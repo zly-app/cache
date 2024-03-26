@@ -1,4 +1,4 @@
-module github.com/zly-app/cache
+module github.com/zly-app/cache/v2
 
 go 1.18
 
