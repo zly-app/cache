@@ -4,31 +4,45 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/zly-app/zapp/filter"
 	"github.com/zly-app/zapp/logger"
 	"github.com/zly-app/zapp/pkg/utils"
 	"go.uber.org/zap"
 
 	"github.com/zly-app/cache/core"
-	"github.com/zly-app/cache/pkg"
 )
+
+type getReq struct {
+	Key            string
+	opt            *options
+	ExpireSec      int
+	ForceLoad      bool // 忽略缓存从加载函数加载数据
+	DontWriteCache bool // 不要刷新到缓存
+}
 
 func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
-	attr := []utils.OtelSpanKV{
-		pkg.Trace.AttrKey(key),
+	ctx, chain := filter.GetClientFilter(ctx, string(defComponentType), c.cacheName, "Get")
+	r := &getReq{
+		Key:            key,
+		opt:            opt,
+		ExpireSec:      opt.ExpireSec,
+		ForceLoad:      opt.ForceLoad,
+		DontWriteCache: opt.DontWriteCache,
 	}
-	attr = append(attr, opt.MakeTraceAttr()...)
-	ctx = pkg.Trace.TraceStart(ctx, c.cacheName, "Get", attr...)
-	defer pkg.Trace.TraceEnd(ctx)
+	sp := aPtr
+	err := chain.HandleInject(ctx, r, sp, func(ctx context.Context, req, rsp interface{}) error {
+		r := req.(*getReq)
+		sp := rsp
 
-	comData, err := c.getRaw(ctx, key, opt)
-	if err == nil {
-		err = c.unmarshalQuery(comData, aPtr, opt.Serializer, opt.Compactor)
-	}
-
-	pkg.Trace.TraceReply(ctx, aPtr, err)
+		comData, err := c.getRaw(ctx, r.Key, r.opt)
+		if err == nil {
+			err = c.unmarshalQuery(comData, sp, r.opt.Serializer, r.opt.Compactor)
+		}
+		return err
+	})
 	return err
 }
 func (c *Cache) getRaw(ctx context.Context, key string, opt *options) ([]byte, error) {
@@ -42,7 +56,11 @@ func (c *Cache) getRaw(ctx context.Context, key string, opt *options) ([]byte, e
 		return bs, nil
 	}
 
-	pkg.Trace.TraceCacheErr(ctx, cacheErr)
+	if cacheErr == ErrCacheMiss {
+		utils.Otel.CtxEvent(ctx, "CacheMiss")
+	} else {
+		utils.Otel.CtxErrEvent(ctx, "GetCacheErr", cacheErr)
+	}
 
 	if cacheErr != ErrCacheMiss { // 缓存故障
 		if c.ignoreCacheFault {

@@ -9,14 +9,6 @@ import (
 	"github.com/zly-app/cache/core"
 )
 
-type singleFlightDoReq struct {
-	Key            string
-	opt            *options
-	ExpireSec      int
-	ForceLoad      bool // 忽略缓存从加载函数加载数据
-	DontWriteCache bool // 不要刷新到缓存
-}
-
 func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}, opts ...core.Option) error {
 	opts = append([]core.Option{WithForceLoad(true)}, opts...)
 	opt := c.newOptions(opts)
@@ -24,7 +16,7 @@ func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}
 	defer putOptions(opt)
 
 	ctx, chain := filter.GetClientFilter(ctx, string(defComponentType), c.cacheName, "SingleFlightDo")
-	r := &singleFlightDoReq{
+	r := &getReq{
 		Key:            key,
 		opt:            opt,
 		ExpireSec:      opt.ExpireSec,
@@ -33,7 +25,7 @@ func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}
 	}
 	sp := aPtr
 	err := chain.HandleInject(ctx, r, sp, func(ctx context.Context, req, rsp interface{}) error {
-		r := req.(*singleFlightDoReq)
+		r := req.(*getReq)
 		sp := rsp
 
 		comData, err := c.singleFlightDo(ctx, r.Key, r.opt)

@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/coocood/freecache v1.2.1
-	github.com/json-iterator/go v1.1.12
 	github.com/stretchr/testify v1.8.4
 	github.com/zly-app/component/redis v0.0.0-20230317062943-5bd3a2a618e8
 	github.com/zly-app/zapp v1.3.10
@@ -26,6 +25,7 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
