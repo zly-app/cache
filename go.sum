@@ -283,8 +283,8 @@ github.com/yusufpapurcu/wmi v1.2.3/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQ
 github.com/zly-app/component/redis v0.0.0-20230317062943-5bd3a2a618e8 h1:Gk8VuF/9QqbVxojGgeWsAjM8uF9UdvB6V54WlOcmxis=
 github.com/zly-app/component/redis v0.0.0-20230317062943-5bd3a2a618e8/go.mod h1:WbNjb7ZCkEjzRbkhED1HsL6FG1C+H71jfnKjC7jL80Y=
 github.com/zly-app/zapp v1.3.2/go.mod h1:SpUxksSSDYnwK+vHhObro4a49TyAkQps+9diVVfFIbc=
-github.com/zly-app/zapp v1.3.10 h1:e+b0Qz0RsZTeouJTYCnhWDHcmxLwGpR5YWSdtsBdnYE=
-github.com/zly-app/zapp v1.3.10/go.mod h1:HmrE9OKTwr36gcv+Zy0fSTJzx+WsUF3JEcWSW3YJTwg=
+github.com/zly-app/zapp v1.3.12 h1:1GGzMQWN7MB+c9O6UxfFdmLsXWbXzXmfgHotVXB+Q00=
+github.com/zly-app/zapp v1.3.12/go.mod h1:HmrE9OKTwr36gcv+Zy0fSTJzx+WsUF3JEcWSW3YJTwg=
 github.com/zlyuancn/zretry v0.0.0-20220514032503-d78bfd22a441 h1:Sw0KI54iN5+zLL74vWx9R1o9S1yWc+f3oRKOjKrMCqA=
 github.com/zlyuancn/zretry v0.0.0-20220514032503-d78bfd22a441/go.mod h1:nXpt3JELMAirMyc5KExlSX96ixpohjHkxHpJlhqRnUU=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=

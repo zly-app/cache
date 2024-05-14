@@ -12,7 +12,9 @@ import (
 const defComponentType core.ComponentType = "cache"
 
 type ICacheCreator interface {
+	// 获取cache, 每次请求应该尽量重新调用这个方法
 	GetCache(name string) ICache
+	// 获取cache, 每次请求应该尽量重新调用这个方法
 	GetDefCache() ICache
 	Close()
 }
@@ -31,11 +33,15 @@ type cacheCreatorAdapter struct {
 }
 
 func (c *cacheCreatorAdapter) GetCache(name string) ICache {
-	return c.conn.GetInstance(c.makeCache, name).(*instance).cache
+	ins, err := c.conn.GetConn(c.makeCache, name)
+	if err != nil {
+		return newErrCache(err)
+	}
+	return ins.(*instance).cache
 }
 
 func (c *cacheCreatorAdapter) GetDefCache() ICache {
-	return c.conn.GetInstance(c.makeCache, consts.DefaultComponentName).(*instance).cache
+	return c.GetCache(consts.DefaultComponentName)
 }
 
 func (c *cacheCreatorAdapter) Close() {

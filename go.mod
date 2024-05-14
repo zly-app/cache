@@ -7,7 +7,7 @@ require (
 	github.com/coocood/freecache v1.2.1
 	github.com/stretchr/testify v1.8.4
 	github.com/zly-app/component/redis v0.0.0-20230317062943-5bd3a2a618e8
-	github.com/zly-app/zapp v1.3.10
+	github.com/zly-app/zapp v1.3.12
 	go.uber.org/zap v1.21.0
 )
 
