@@ -97,7 +97,7 @@ components:
       ExpireSec: 300 # 默认过期时间, 秒, < 1 表示永久
       IgnoreCacheFault: false # 是否忽略缓存数据库故障, 如果设为true, 在缓存数据库故障时从加载器获取数据, 这会导致缓存击穿. 如果设为false, 在缓存数据库故障时直接返回错误
       CacheDB:
-        Type: freecache # 缓存数据库类型, 支持 no, bigcache, freecache, redis
+        Type: bigcache # 缓存数据库类型, 支持 no, bigcache, freecache, redis
         BigCache: # 注意: bigcache 仅支持整体的过期时间, 不支持对单个key设置过期时间.
           Shards: 1024 # 分片数, 必须是2的幂
           CleanTimeSec: 60 # 清理周期秒数, 为 0 时不自动清理.
