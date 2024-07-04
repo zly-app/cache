@@ -12,8 +12,6 @@ import (
 )
 
 const (
-	defCacheName = "default"
-
 	defCompactor        = "raw"
 	defSerializer       = "sonic_std"
 	defSingleFlight     = "single"
@@ -31,7 +29,6 @@ const (
 )
 
 type Config struct {
-	CacheName        string // 缓存器的名称, 在 trace 和 Metrics 上报时有用
 	Compactor        string // 默认压缩器名, 可选 raw, zstd, gzip
 	Serializer       string // 默认序列化器名, 可选 sonic, sonic_std, msgpack, jsoniter, jsoniter_standard, json, yaml
 	SingleFlight     string // 默认单跑模块, 可选 no, single
@@ -72,10 +69,6 @@ func NewConfig() *Config {
 }
 
 func (conf *Config) Check() error {
-	if conf.CacheName == "" {
-		conf.CacheName = defCacheName
-	}
-
 	if conf.ExpireSec < 1 {
 		conf.ExpireSec = 0
 	}

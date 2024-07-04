@@ -124,9 +124,6 @@ components:
           WriteTimeoutSec: 5 # 超时, 秒
 ```
 
-
-
-
 # 支持的数据库
 
 + 支持任何数据库, 不关心用户如何加载数据

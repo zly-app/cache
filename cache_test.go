@@ -20,7 +20,8 @@ func makeBigCache() ICache {
 	conf := NewConfig()
 	conf.ExpireSec = 1
 	conf.CacheDB.Type = "bigcache"
-	cache, err := NewCache(conf)
+	conf.CacheDB.BigCache.ExactExpire = true
+	cache, err := NewCache("cachetest_bigcache", conf)
 	if err != nil {
 		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
@@ -30,7 +31,7 @@ func makeBigCache() ICache {
 func makeFreeCache() ICache {
 	conf := NewConfig()
 	conf.CacheDB.Type = "freecache"
-	cache, err := NewCache(conf)
+	cache, err := NewCache("cachetest_freecache", conf)
 	if err != nil {
 		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
@@ -41,7 +42,7 @@ func makeRedisCache() ICache {
 	conf := NewConfig()
 	conf.CacheDB.Type = "redis"
 	conf.CacheDB.Redis.Address = "localhost:6379"
-	cache, err := NewCache(conf)
+	cache, err := NewCache("cachetest_redis", conf)
 	if err != nil {
 		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
@@ -57,7 +58,8 @@ func TestBigCache(t *testing.T) {
 		conf := NewConfig()
 		conf.ExpireSec = 1
 		conf.CacheDB.Type = "bigcache"
-		cache, err := NewCache(conf)
+		conf.CacheDB.BigCache.ExactExpire = true
+		cache, err := NewCache("cachetest_bigcache", conf)
 		if err != nil {
 			panic(fmt.Errorf("创建Cache失败: %v", err))
 		}
@@ -77,8 +79,8 @@ func TestFreeCache(t *testing.T) {
 	t.Run("testDefaultExpire", func(t *testing.T) {
 		conf := NewConfig()
 		conf.ExpireSec = 1
-		conf.CacheDB.Type = "freecache"
-		cache, err := NewCache(conf)
+		conf.CacheDB.Type = "cachetest_freecache"
+		cache, err := NewCache("cachetest_freecache", conf)
 		if err != nil {
 			panic(fmt.Errorf("创建Cache失败: %v", err))
 		}
@@ -312,7 +314,7 @@ func benchGet(b *testing.B, maxKeyCount, sizeMB int, serializer core.ISerializer
 
 	conf := NewConfig()
 	conf.CacheDB.FreeCache.SizeMB = sizeMB
-	cache, err := NewCache(conf)
+	cache, err := NewCache("cachetest_benchGet", conf)
 	require.Nil(b, err)
 
 	expects := make([][]byte, maxKeyCount)

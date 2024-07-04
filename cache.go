@@ -61,14 +61,14 @@ func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer core
 	return nil
 }
 
-func NewCache(conf *Config) (ICache, error) {
+func NewCache(name string, conf *Config) (ICache, error) {
 	err := conf.Check()
 	if err != nil {
 		return nil, fmt.Errorf("cache配置检查失败: %v", err)
 	}
 
 	cache := &Cache{
-		cacheName:        conf.CacheName,
+		cacheName:        name,
 		expireSec:        conf.ExpireSec,
 		ignoreCacheFault: conf.IgnoreCacheFault,
 	}
