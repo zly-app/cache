@@ -17,7 +17,6 @@ type ICacheCreator interface {
 	GetCache(name string) ICache
 	// 获取cache, 每次请求应该尽量重新调用这个方法
 	GetDefCache() ICache
-	Close()
 }
 
 type instance struct {

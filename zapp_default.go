@@ -7,7 +7,7 @@ import (
 	"github.com/zly-app/zapp/handler"
 )
 
-var defCreator ICacheCreator = &cacheCreatorAdapter{
+var defCreator = &cacheCreatorAdapter{
 	conn: conn.NewConn(),
 }
 
