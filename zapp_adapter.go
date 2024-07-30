@@ -3,6 +3,7 @@ package cache
 import (
 	"fmt"
 
+	"github.com/zly-app/zapp"
 	"github.com/zly-app/zapp/component/conn"
 	"github.com/zly-app/zapp/consts"
 	"github.com/zly-app/zapp/core"
@@ -28,7 +29,6 @@ func (i *instance) Close() {
 }
 
 type cacheCreatorAdapter struct {
-	app  core.IApp
 	conn *conn.Conn
 }
 
@@ -50,7 +50,7 @@ func (c *cacheCreatorAdapter) Close() {
 
 func (c *cacheCreatorAdapter) makeCache(name string) (conn.IInstance, error) {
 	conf := NewConfig()
-	err := c.app.GetConfig().ParseComponentConfig(defComponentType, name, conf, true)
+	err := zapp.App().GetConfig().ParseComponentConfig(defComponentType, name, conf, true)
 	if err != nil {
 		return nil, fmt.Errorf("cache配置错误: %v", err)
 	}
@@ -62,10 +62,11 @@ func (c *cacheCreatorAdapter) makeCache(name string) (conn.IInstance, error) {
 	return &instance{cache: cache}, nil
 }
 
-func NewCacheCreator(app core.IApp) ICacheCreator {
-	creator := &cacheCreatorAdapter{
-		app:  app,
-		conn: conn.NewConn(),
-	}
-	return creator
+// deprecated: use GetCacheCreator
+func NewCacheCreator(_ core.IApp) ICacheCreator {
+	return defCreator
+}
+
+func GetCacheCreator() ICacheCreator {
+	return defCreator
 }
