@@ -72,12 +72,8 @@ func main() {
 	app := zapp.NewApp("test")
 	defer app.Exit()
 
-	creator := cache.NewCacheCreator(app) // 创建cache建造者
-
-	cacheDef := creator.GetCache("default") // 通过cache建造者获取cache, 每次请求应该尽量重新获取cache
-
 	var a string
-	err := cacheDef.Get(context.Background(), "key", &a,
+	err := cache.GetDefCache().Get(context.Background(), "key", &a,
 		cache.WithLoadFn(func(ctx context.Context, key string) (interface{}, error) {
 			return "hello", nil
 		}))
