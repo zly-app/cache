@@ -7,6 +7,7 @@ import (
 	"github.com/zly-app/zapp/component/conn"
 	"github.com/zly-app/zapp/consts"
 	"github.com/zly-app/zapp/core"
+	"github.com/zly-app/zapp/handler"
 )
 
 // 默认组件类型
@@ -61,9 +62,14 @@ func (c *cacheCreatorAdapter) makeCache(name string) (conn.IInstance, error) {
 	return &instance{cache: cache}, nil
 }
 
-// deprecated: use GetCacheCreator
-func NewCacheCreator(_ core.IApp) ICacheCreator {
-	return defCreator
+func NewCacheCreator() ICacheCreator {
+	c := &cacheCreatorAdapter{
+		conn: conn.NewConn(),
+	}
+	handler.AddHandler(handler.AfterCloseComponent, func(_ core.IApp, _ handler.HandlerType) {
+		c.Close()
+	})
+	return c
 }
 
 func GetCacheCreator() ICacheCreator {
