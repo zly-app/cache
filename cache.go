@@ -91,10 +91,10 @@ func NewCache(name string, conf *Config) (ICache, error) {
 		cache.cacheDB = freecache.NewCache(conf.CacheDB.FreeCache.SizeMB)
 	case "redis":
 		var redisClient redis.UniversalClient
-		if conf.CacheDB.Redis.RedisName != "" {
-			redisClient = redis.GetClient(conf.CacheDB.Redis.RedisName)
+		if conf.CacheDB.RedisName != "" {
+			redisClient = redis.GetClient(conf.CacheDB.RedisName)
 		} else {
-			redisClient, err = redis.NewClient(&conf.CacheDB.Redis.RedisConfig, conf.CacheDB.Redis.RedisName)
+			redisClient, err = redis.NewClient(&conf.CacheDB.Redis, "cache")
 		}
 		if err != nil {
 			return nil, fmt.Errorf("创建redis客户端失败: %v", err)

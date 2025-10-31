@@ -47,10 +47,8 @@ type Config struct {
 		FreeCache struct {
 			SizeMB int // 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
 		}
-		Redis struct {
-			RedisName string // redis组件名, 如果设置, 将使用该redis组件, 且以下redis配置无效
-			redis.RedisConfig
-		}
+		RedisName string // redis组件名, 如果设置, 将使用该redis组件, 且以下redis配置无效
+		Redis     redis.RedisConfig
 	}
 }
 

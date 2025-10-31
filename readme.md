@@ -103,8 +103,8 @@ components:
           ExactExpire: false # 精准过期时间, 官方库的过期时间在 [Expire, Expire+CleanTimeSec] 区间. 如果设为true, 则过期时间精确为 Expire
         FreeCache: # memory 内存配置
           SizeMB: 1 # 分配内存大小, 单位mb, 单条数据大小不能超过该值的 1/1024
+        RedisName: "" # redis组件名, 如果设置, 将使用该redis组件, 且以下redis配置无效
         Redis: # redis 内存配置
-          RedisName: "" # redis组件名, 如果设置, 将使用该redis组件, 且以下redis配置无效
           Address: localhost:6379 # 地址: host1:port1,host2:port2
           UserName: "" # 用户名                     
           Password: "" # 密码
