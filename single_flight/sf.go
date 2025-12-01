@@ -1,7 +1,7 @@
 package single_flight
 
 import (
-	"github.com/zly-app/zapp/logger"
+	"github.com/zly-app/zapp/log"
 	"go.uber.org/zap"
 
 	"github.com/zly-app/cache/v2/core"
@@ -23,7 +23,7 @@ var sfs = map[string]SingleFlightCreator{
 // 注册, 重复注册会panic
 func RegistrySingleFlightCreator(name string, creator SingleFlightCreator) {
 	if _, ok := sfs[name]; ok {
-		logger.Log.Panic("SingleFlight建造者重复注册", zap.String("name", name))
+		log.Panic("SingleFlight建造者重复注册", zap.String("name", name))
 	}
 	sfs[name] = creator
 }
@@ -32,7 +32,7 @@ func RegistrySingleFlightCreator(name string, creator SingleFlightCreator) {
 func GetSingleFlight(name string) core.ISingleFlight {
 	creator, ok := sfs[name]
 	if !ok {
-		logger.Log.Panic("未定义的SingleFlightName", zap.String("name", name))
+		log.Panic("未定义的SingleFlightName", zap.String("name", name))
 	}
 	return creator()
 }

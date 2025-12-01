@@ -20,16 +20,8 @@ type ICacheCreator interface {
 	GetDefCache() ICache
 }
 
-type instance struct {
-	cache ICache
-}
-
-func (i *instance) Close() {
-	_ = i.cache.Close()
-}
-
 type cacheCreatorAdapter struct {
-	conn *conn.Conn
+	conn *conn.AnyConn[ICache]
 }
 
 func (c *cacheCreatorAdapter) GetCache(name string) ICache {
@@ -37,7 +29,7 @@ func (c *cacheCreatorAdapter) GetCache(name string) ICache {
 	if err != nil {
 		return newErrCache(err)
 	}
-	return ins.(*instance).cache
+	return ins
 }
 
 func (c *cacheCreatorAdapter) GetDefCache() ICache {
@@ -48,7 +40,7 @@ func (c *cacheCreatorAdapter) Close() {
 	c.conn.CloseAll()
 }
 
-func (c *cacheCreatorAdapter) makeCache(name string) (conn.IInstance, error) {
+func (c *cacheCreatorAdapter) makeCache(name string) (ICache, error) {
 	conf := NewConfig()
 	err := zapp.App().GetConfig().ParseComponentConfig(defComponentType, name, conf, true)
 	if err != nil {
@@ -59,12 +51,14 @@ func (c *cacheCreatorAdapter) makeCache(name string) (conn.IInstance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cache创建失败: %v", err)
 	}
-	return &instance{cache: cache}, nil
+	return cache, nil
 }
 
 func NewCacheCreator() ICacheCreator {
 	c := &cacheCreatorAdapter{
-		conn: conn.NewConn(),
+		conn: conn.NewAnyConn[ICache](func(name string, conn ICache) {
+			_ = conn.Close()
+		}),
 	}
 	handler.AddHandler(handler.AfterCloseComponent, func(_ core.IApp, _ handler.HandlerType) {
 		c.Close()

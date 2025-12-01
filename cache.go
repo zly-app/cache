@@ -92,7 +92,7 @@ func NewCache(name string, conf *Config) (ICache, error) {
 	case "redis":
 		var redisClient redis.UniversalClient
 		if conf.CacheDB.RedisName != "" {
-			redisClient = redis.GetClient(conf.CacheDB.RedisName)
+			redisClient, err = redis.GetClient(conf.CacheDB.RedisName)
 		} else {
 			redisClient, err = redis.NewClient(&conf.CacheDB.Redis, "cache")
 		}

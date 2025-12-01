@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/zly-app/zapp/filter"
-	"github.com/zly-app/zapp/logger"
+	"github.com/zly-app/zapp/log"
 	"github.com/zly-app/zapp/pkg/utils"
 	"go.uber.org/zap"
 
@@ -57,14 +57,14 @@ func (c *Cache) getRaw(ctx context.Context, key string, opt *options) ([]byte, e
 	}
 
 	if cacheErr == ErrCacheMiss {
-		utils.Otel.CtxEvent(ctx, "CacheMiss")
+		utils.Trace.CtxEvent(ctx, "CacheMiss")
 	} else {
-		utils.Otel.CtxErrEvent(ctx, "GetCacheErr", cacheErr)
+		utils.Trace.CtxErrEvent(ctx, "GetCacheErr", cacheErr)
 	}
 
 	if cacheErr != ErrCacheMiss { // 缓存故障
 		if c.ignoreCacheFault {
-			logger.Log.Error("从缓存数据库加载数据故障", zap.String("key", key), zap.Error(cacheErr))
+			log.Error("从缓存数据库加载数据故障", zap.String("key", key), zap.Error(cacheErr))
 		}
 		cacheErr = fmt.Errorf("从缓存数据库加载数据故障: err: %v", cacheErr)
 		if !c.ignoreCacheFault { // 如果不忽略缓存故障则直接报告错误
@@ -104,7 +104,7 @@ func (c *Cache) load(opt *options) core.LoadInvoke {
 				if !c.ignoreCacheFault {
 					return fmt.Errorf("写入缓存失败: %v", cacheErr)
 				}
-				logger.Log.Error("写入缓存失败", zap.String("key", key), zap.Error(err))
+				log.Error("写入缓存失败", zap.String("key", key), zap.Error(err))
 			}
 			return nil
 		})
