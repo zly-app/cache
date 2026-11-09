@@ -6,7 +6,7 @@ require (
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/coocood/freecache v1.2.1
 	github.com/stretchr/testify v1.10.0
-	github.com/zly-app/component/redis v0.0.0-20261109090157-272e1bfac65e
+	github.com/zly-app/component/redis v0.0.0-20261109123915-2976065cf134
 	github.com/zly-app/zapp v1.4.6
 	go.uber.org/zap v1.21.0
 )
