@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/zly-app/zapp/filter"
-
 	"github.com/zly-app/cache/v2/core"
 )
 
@@ -15,7 +13,6 @@ func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}
 	opt.ForceLoad = true // 强行从加载函数加载
 	defer putOptions(opt)
 
-	ctx, chain := filter.GetClientFilter(ctx, string(defComponentType), c.cacheName, "SingleFlightDo")
 	r := &getReq{
 		Key:            key,
 		opt:            opt,
@@ -24,7 +21,7 @@ func (c *Cache) SingleFlightDo(ctx context.Context, key string, aPtr interface{}
 		DontWriteCache: opt.DontWriteCache,
 	}
 	sp := aPtr
-	err := chain.HandleInject(ctx, r, sp, func(ctx context.Context, req, rsp interface{}) error {
+	err := c.handleInject(ctx, "SingleFlightDo", r, sp, func(ctx context.Context, req, rsp interface{}) error {
 		r := req.(*getReq)
 		sp := rsp
 

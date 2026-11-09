@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/zly-app/zapp/filter"
 	"github.com/zly-app/zapp/log"
 	"github.com/zly-app/zapp/pkg/utils"
 	"go.uber.org/zap"
@@ -24,7 +23,6 @@ func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...c
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
-	ctx, chain := filter.GetClientFilter(ctx, string(defComponentType), c.cacheName, "Get")
 	r := &getReq{
 		Key:            key,
 		opt:            opt,
@@ -33,7 +31,7 @@ func (c *Cache) Get(ctx context.Context, key string, aPtr interface{}, opts ...c
 		DontWriteCache: opt.DontWriteCache,
 	}
 	sp := aPtr
-	err := chain.HandleInject(ctx, r, sp, func(ctx context.Context, req, rsp interface{}) error {
+	err := c.handleInject(ctx, "Get", r, sp, func(ctx context.Context, req, rsp interface{}) error {
 		r := req.(*getReq)
 		sp := rsp
 

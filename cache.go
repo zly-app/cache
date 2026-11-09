@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/zly-app/component/redis"
+	zappcore "github.com/zly-app/zapp/core"
 
 	"github.com/zly-app/cache/v2/cachedb/bigcache"
 	"github.com/zly-app/cache/v2/cachedb/freecache"
@@ -21,6 +22,7 @@ type Cache struct {
 	sf               core.ISingleFlight // 单跑模块
 	expireSec        int                // 默认过期时间
 	ignoreCacheFault bool               // 是否忽略缓存数据库故障
+	app              zappcore.IApp      // 接入 zapp 时用于挂 filter；独立使用时为 nil
 }
 
 func (c *Cache) Close() error {
@@ -61,7 +63,10 @@ func (c *Cache) unmarshalQuery(comData []byte, aPtr interface{}, serializer core
 	return nil
 }
 
-func NewCache(name string, conf *Config) (ICache, error) {
+// NewCache 创建缓存实例。redisCreator 与 app 由组合根注入：
+// 不使用 redis 组件时 redisCreator 可为 nil；独立使用（未接入 zapp）时 app 可为 nil，
+// 此时不挂 zapp filter 链。
+func NewCache(name string, conf *Config, redisCreator redis.Creator, app zappcore.IApp) (ICache, error) {
 	err := conf.Check()
 	if err != nil {
 		return nil, fmt.Errorf("cache配置检查失败: %v", err)
@@ -71,6 +76,7 @@ func NewCache(name string, conf *Config) (ICache, error) {
 		cacheName:        name,
 		expireSec:        conf.ExpireSec,
 		ignoreCacheFault: conf.IgnoreCacheFault,
+		app:              app,
 	}
 
 	switch v := strings.ToLower(conf.CacheDB.Type); v {
@@ -92,7 +98,10 @@ func NewCache(name string, conf *Config) (ICache, error) {
 	case "redis":
 		var redisClient redis.UniversalClient
 		if conf.CacheDB.RedisName != "" {
-			redisClient, err = redis.GetClient(conf.CacheDB.RedisName)
+			if redisCreator == nil {
+				return nil, fmt.Errorf("cache 使用 redis 组件但未注入 redis creator")
+			}
+			redisClient, err = redisCreator.GetClient(conf.CacheDB.RedisName)
 		} else {
 			redisClient, err = redis.NewClient(&conf.CacheDB.Redis, "cache")
 		}

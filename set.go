@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/zly-app/zapp/filter"
-
 	"github.com/zly-app/cache/v2/core"
 )
 
@@ -20,14 +18,13 @@ func (c *Cache) Set(ctx context.Context, key string, data interface{}, opts ...c
 	opt := c.newOptions(opts)
 	defer putOptions(opt)
 
-	ctx, chain := filter.GetClientFilter(ctx, string(defComponentType), c.cacheName, "Set")
 	r := &setReq{
 		Key:       key,
 		Data:      data,
 		opt:       opt,
 		ExpireSec: opt.ExpireSec,
 	}
-	_, err := chain.Handle(ctx, r, func(ctx context.Context, req interface{}) (interface{}, error) {
+	_, err := c.handle(ctx, "Set", r, func(ctx context.Context, req interface{}) (interface{}, error) {
 		r := req.(*setReq)
 		bs, err := c.marshalQuery(r.Data, r.opt.Serializer, r.opt.Compactor)
 		if err == nil {

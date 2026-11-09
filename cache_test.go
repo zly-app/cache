@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"net"
 	"strconv"
 	"sync"
 	"testing"
@@ -21,7 +22,7 @@ func makeBigCache() ICache {
 	conf.ExpireSec = 1
 	conf.CacheDB.Type = "bigcache"
 	conf.CacheDB.BigCache.ExactExpire = true
-	cache, err := NewCache("cachetest_bigcache", conf)
+	cache, err := NewCache("cachetest_bigcache", conf, nil, nil)
 	if err != nil {
 		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
@@ -31,7 +32,7 @@ func makeBigCache() ICache {
 func makeFreeCache() ICache {
 	conf := NewConfig()
 	conf.CacheDB.Type = "freecache"
-	cache, err := NewCache("cachetest_freecache", conf)
+	cache, err := NewCache("cachetest_freecache", conf, nil, nil)
 	if err != nil {
 		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
@@ -42,7 +43,7 @@ func makeRedisCache() ICache {
 	conf := NewConfig()
 	conf.CacheDB.Type = "redis"
 	conf.CacheDB.Redis.Address = "localhost:6379"
-	cache, err := NewCache("cachetest_redis", conf)
+	cache, err := NewCache("cachetest_redis", conf, nil, nil)
 	if err != nil {
 		panic(fmt.Errorf("创建Cache失败: %v", err))
 	}
@@ -59,7 +60,7 @@ func TestBigCache(t *testing.T) {
 		conf.ExpireSec = 1
 		conf.CacheDB.Type = "bigcache"
 		conf.CacheDB.BigCache.ExactExpire = true
-		cache, err := NewCache("cachetest_bigcache", conf)
+		cache, err := NewCache("cachetest_bigcache", conf, nil, nil)
 		if err != nil {
 			panic(fmt.Errorf("创建Cache失败: %v", err))
 		}
@@ -79,8 +80,8 @@ func TestFreeCache(t *testing.T) {
 	t.Run("testDefaultExpire", func(t *testing.T) {
 		conf := NewConfig()
 		conf.ExpireSec = 1
-		conf.CacheDB.Type = "cachetest_freecache"
-		cache, err := NewCache("cachetest_freecache", conf)
+		conf.CacheDB.Type = "freecache"
+		cache, err := NewCache("cachetest_freecache", conf, nil, nil)
 		if err != nil {
 			panic(fmt.Errorf("创建Cache失败: %v", err))
 		}
@@ -93,6 +94,12 @@ func TestFreeCache(t *testing.T) {
 }
 
 func TestRedisCache(t *testing.T) {
+	conn, err := net.DialTimeout("tcp", "localhost:6379", 200*time.Millisecond)
+	if err != nil {
+		t.Skip("本地无 redis（localhost:6379），跳过 redis 集成测试")
+	}
+	_ = conn.Close()
+
 	t.Run("testSetGet", func(t *testing.T) { testSetGet(t, makeRedisCache()) })
 	t.Run("testSetGetSlice", func(t *testing.T) { testSetGetSlice(t, makeRedisCache()) })
 	t.Run("testDel", func(t *testing.T) { testDel(t, makeRedisCache()) })
@@ -314,7 +321,7 @@ func benchGet(b *testing.B, maxKeyCount, sizeMB int, serializer core.ISerializer
 
 	conf := NewConfig()
 	conf.CacheDB.FreeCache.SizeMB = sizeMB
-	cache, err := NewCache("cachetest_benchGet", conf)
+	cache, err := NewCache("cachetest_benchGet", conf, nil, nil)
 	require.Nil(b, err)
 
 	expects := make([][]byte, maxKeyCount)

@@ -3,11 +3,10 @@ package cache
 import (
 	"fmt"
 
-	"github.com/zly-app/zapp"
+	"github.com/zly-app/component/redis"
 	"github.com/zly-app/zapp/component/conn"
 	"github.com/zly-app/zapp/consts"
 	"github.com/zly-app/zapp/core"
-	"github.com/zly-app/zapp/handler"
 )
 
 // 默认组件类型
@@ -18,10 +17,14 @@ type ICacheCreator interface {
 	GetCache(name string) ICache
 	// 获取cache, 每次请求应该尽量重新调用这个方法
 	GetDefCache() ICache
+	// Close 关闭全部 cache
+	Close()
 }
 
 type cacheCreatorAdapter struct {
-	conn *conn.AnyConn[ICache]
+	app          core.IApp
+	redisCreator redis.Creator
+	conn         *conn.AnyConn[ICache]
 }
 
 func (c *cacheCreatorAdapter) GetCache(name string) ICache {
@@ -42,30 +45,24 @@ func (c *cacheCreatorAdapter) Close() {
 
 func (c *cacheCreatorAdapter) makeCache(name string) (ICache, error) {
 	conf := NewConfig()
-	err := zapp.App().GetConfig().ParseComponentConfig(defComponentType, name, conf, true)
-	if err != nil {
+	if err := c.app.GetConfig().ParseComponentConfig(defComponentType, name, conf, true); err != nil {
 		return nil, fmt.Errorf("cache配置错误: %v", err)
 	}
 
-	cache, err := NewCache(name, conf)
+	cache, err := NewCache(name, conf, c.redisCreator, c.app)
 	if err != nil {
 		return nil, fmt.Errorf("cache创建失败: %v", err)
 	}
 	return cache, nil
 }
 
-func NewCacheCreator() ICacheCreator {
-	c := &cacheCreatorAdapter{
+// NewCacheCreator 创建 cache 集合。app 与 redis creator 由组合根注入，不再有包级单例。
+func NewCacheCreator(app core.IApp, redisCreator redis.Creator) ICacheCreator {
+	return &cacheCreatorAdapter{
+		app:          app,
+		redisCreator: redisCreator,
 		conn: conn.NewAnyConn[ICache](func(name string, conn ICache) {
 			_ = conn.Close()
 		}),
 	}
-	handler.AddHandler(handler.AfterCloseComponent, func(_ core.IApp, _ handler.HandlerType) {
-		c.Close()
-	})
-	return c
-}
-
-func GetCacheCreator() ICacheCreator {
-	return defCreator
 }
